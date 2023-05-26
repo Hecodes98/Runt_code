@@ -1,0 +1,28 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.pyd
+*.dll
+
+# Local development
+venv/
+.env
+/.pytest_cache
+/.idea/
+/.vscode/
+*.sqlite3
+*.log
+logs/
+output/
+tmp/
+*.swp
+
+# Environment
+.envrc
+env.sh
+env/
+
+# Assests
+*.png

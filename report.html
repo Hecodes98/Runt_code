@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>report.html</title>
+    <link href="assets/style.css" rel="stylesheet" type="text/css"/></head>
+  <body onLoad="init()">
+    <script>/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+function toArray(iter) {
+    if (iter === null) {
+        return null;
+    }
+    return Array.prototype.slice.call(iter);
+}
+
+function find(selector, elem) { // eslint-disable-line no-redeclare
+    if (!elem) {
+        elem = document;
+    }
+    return elem.querySelector(selector);
+}
+
+function findAll(selector, elem) {
+    if (!elem) {
+        elem = document;
+    }
+    return toArray(elem.querySelectorAll(selector));
+}
+
+function sortColumn(elem) {
+    toggleSortStates(elem);
+    const colIndex = toArray(elem.parentNode.childNodes).indexOf(elem);
+    let key;
+    if (elem.classList.contains('result')) {
+        key = keyResult;
+    } else if (elem.classList.contains('links')) {
+        key = keyLink;
+    } else {
+        key = keyAlpha;
+    }
+    sortTable(elem, key(colIndex));
+}
+
+function showAllExtras() { // eslint-disable-line no-unused-vars
+    findAll('.col-result').forEach(showExtras);
+}
+
+function hideAllExtras() { // eslint-disable-line no-unused-vars
+    findAll('.col-result').forEach(hideExtras);
+}
+
+function showExtras(colresultElem) {
+    const extras = colresultElem.parentNode.nextElementSibling;
+    const expandcollapse = colresultElem.firstElementChild;
+    extras.classList.remove('collapsed');
+    expandcollapse.classList.remove('expander');
+    expandcollapse.classList.add('collapser');
+}
+
+function hideExtras(colresultElem) {
+    const extras = colresultElem.parentNode.nextElementSibling;
+    const expandcollapse = colresultElem.firstElementChild;
+    extras.classList.add('collapsed');
+    expandcollapse.classList.remove('collapser');
+    expandcollapse.classList.add('expander');
+}
+
+function showFilters() {
+    let visibleString = getQueryParameter('visible') || 'all';
+    visibleString = visibleString.toLowerCase();
+    const checkedItems = visibleString.split(',');
+
+    const filterItems = document.getElementsByClassName('filter');
+    for (let i = 0; i < filterItems.length; i++) {
+        filterItems[i].hidden = false;
+
+        if (visibleString != 'all') {
+            filterItems[i].checked = checkedItems.includes(filterItems[i].getAttribute('data-test-result'));
+            filterTable(filterItems[i]);
+        }
+    }
+}
+
+function addCollapse() {
+    // Add links for show/hide all
+    const resulttable = find('table#results-table');
+    const showhideall = document.createElement('p');
+    showhideall.innerHTML = '<a href="javascript:showAllExtras()">Show all details</a> / ' +
+                            '<a href="javascript:hideAllExtras()">Hide all details</a>';
+    resulttable.parentElement.insertBefore(showhideall, resulttable);
+
+    // Add show/hide link to each result
+    findAll('.col-result').forEach(function(elem) {
+        const collapsed = getQueryParameter('collapsed') || 'Passed';
+        const extras = elem.parentNode.nextElementSibling;
+        const expandcollapse = document.createElement('span');
+        if (extras.classList.contains('collapsed')) {
+            expandcollapse.classList.add('expander');
+        } else if (collapsed.includes(elem.innerHTML)) {
+            extras.classList.add('collapsed');
+            expandcollapse.classList.add('expander');
+        } else {
+            expandcollapse.classList.add('collapser');
+        }
+        elem.appendChild(expandcollapse);
+
+        elem.addEventListener('click', function(event) {
+            if (event.currentTarget.parentNode.nextElementSibling.classList.contains('collapsed')) {
+                showExtras(event.currentTarget);
+            } else {
+                hideExtras(event.currentTarget);
+            }
+        });
+    });
+}
+
+function getQueryParameter(name) {
+    const match = RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search);
+    return match && decodeURIComponent(match[1].replace(/\+/g, ' '));
+}
+
+function init () { // eslint-disable-line no-unused-vars
+    resetSortHeaders();
+
+    addCollapse();
+
+    showFilters();
+
+    sortColumn(find('.initial-sort'));
+
+    findAll('.sortable').forEach(function(elem) {
+        elem.addEventListener('click',
+            function() {
+                sortColumn(elem);
+            }, false);
+    });
+}
+
+function sortTable(clicked, keyFunc) {
+    const rows = findAll('.results-table-row');
+    const reversed = !clicked.classList.contains('asc');
+    const sortedRows = sort(rows, keyFunc, reversed);
+    /* Whole table is removed here because browsers acts much slower
+     * when appending existing elements.
+     */
+    const thead = document.getElementById('results-table-head');
+    document.getElementById('results-table').remove();
+    const parent = document.createElement('table');
+    parent.id = 'results-table';
+    parent.appendChild(thead);
+    sortedRows.forEach(function(elem) {
+        parent.appendChild(elem);
+    });
+    document.getElementsByTagName('BODY')[0].appendChild(parent);
+}
+
+function sort(items, keyFunc, reversed) {
+    const sortArray = items.map(function(item, i) {
+        return [keyFunc(item), i];
+    });
+
+    sortArray.sort(function(a, b) {
+        const keyA = a[0];
+        const keyB = b[0];
+
+        if (keyA == keyB) return 0;
+
+        if (reversed) {
+            return keyA < keyB ? 1 : -1;
+        } else {
+            return keyA > keyB ? 1 : -1;
+        }
+    });
+
+    return sortArray.map(function(item) {
+        const index = item[1];
+        return items[index];
+    });
+}
+
+function keyAlpha(colIndex) {
+    return function(elem) {
+        return elem.childNodes[1].childNodes[colIndex].firstChild.data.toLowerCase();
+    };
+}
+
+function keyLink(colIndex) {
+    return function(elem) {
+        const dataCell = elem.childNodes[1].childNodes[colIndex].firstChild;
+        return dataCell == null ? '' : dataCell.innerText.toLowerCase();
+    };
+}
+
+function keyResult(colIndex) {
+    return function(elem) {
+        const strings = ['Error', 'Failed', 'Rerun', 'XFailed', 'XPassed',
+            'Skipped', 'Passed'];
+        return strings.indexOf(elem.childNodes[1].childNodes[colIndex].firstChild.data);
+    };
+}
+
+function resetSortHeaders() {
+    findAll('.sort-icon').forEach(function(elem) {
+        elem.parentNode.removeChild(elem);
+    });
+    findAll('.sortable').forEach(function(elem) {
+        const icon = document.createElement('div');
+        icon.className = 'sort-icon';
+        icon.textContent = 'vvv';
+        elem.insertBefore(icon, elem.firstChild);
+        elem.classList.remove('desc', 'active');
+        elem.classList.add('asc', 'inactive');
+    });
+}
+
+function toggleSortStates(elem) {
+    //if active, toggle between asc and desc
+    if (elem.classList.contains('active')) {
+        elem.classList.toggle('asc');
+        elem.classList.toggle('desc');
+    }
+
+    //if inactive, reset all other functions and add ascending active
+    if (elem.classList.contains('inactive')) {
+        resetSortHeaders();
+        elem.classList.remove('inactive');
+        elem.classList.add('active');
+    }
+}
+
+function isAllRowsHidden(value) {
+    return value.hidden == false;
+}
+
+function filterTable(elem) { // eslint-disable-line no-unused-vars
+    const outcomeAtt = 'data-test-result';
+    const outcome = elem.getAttribute(outcomeAtt);
+    const classOutcome = outcome + ' results-table-row';
+    const outcomeRows = document.getElementsByClassName(classOutcome);
+
+    for(let i = 0; i < outcomeRows.length; i++){
+        outcomeRows[i].hidden = !elem.checked;
+    }
+
+    const rows = findAll('.results-table-row').filter(isAllRowsHidden);
+    const allRowsHidden = rows.length == 0 ? true : false;
+    const notFoundMessage = document.getElementById('not-found-message');
+    notFoundMessage.hidden = !allRowsHidden;
+}
+</script>
+    <h1>report.html</h1>
+    <p>Report generated on 25-May-2023 at 18:33:31 by <a href="https://pypi.python.org/pypi/pytest-html">pytest-html</a> v3.2.0</p>
+    <h2>Environment</h2>
+    <table id="environment">
+      <tr>
+        <td>Packages</td>
+        <td>{"pluggy": "1.0.0", "pytest": "7.2.2"}</td></tr>
+      <tr>
+        <td>Platform</td>
+        <td>Windows-10-10.0.19045-SP0</td></tr>
+      <tr>
+        <td>Plugins</td>
+        <td>{"check": "2.1.4", "html": "3.2.0", "html-reporter": "0.2.9", "metadata": "2.0.4"}</td></tr>
+      <tr>
+        <td>Python</td>
+        <td>3.10.11</td></tr></table>
+    <h2>Summary</h2>
+    <p>13 tests ran in 797.38 seconds. </p>
+    <p class="filter" hidden="true">(Un)check the boxes to filter the results.</p><input checked="true" class="filter" data-test-result="passed" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="passed">6 passed</span>, <input checked="true" class="filter" data-test-result="skipped" disabled="true" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="skipped">0 skipped</span>, <input checked="true" class="filter" data-test-result="failed" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="failed">7 failed</span>, <input checked="true" class="filter" data-test-result="error" disabled="true" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="error">0 errors</span>, <input checked="true" class="filter" data-test-result="xfailed" disabled="true" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="xfailed">0 expected failures</span>, <input checked="true" class="filter" data-test-result="xpassed" disabled="true" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="xpassed">0 unexpected passes</span>
+    <h2>Results</h2>
+    <table id="results-table">
+      <thead id="results-table-head">
+        <tr>
+          <th class="sortable result initial-sort" col="result">Result</th>
+          <th class="sortable" col="name">Test</th>
+          <th class="sortable" col="duration">Duration</th>
+          <th class="sortable links" col="links">Links</th></tr>
+        <tr hidden="true" id="not-found-message">
+          <th colspan="4">No results found. Try to check the filters</th></tr></thead>
+      <tbody class="failed results-table-row">
+        <tr>
+          <td class="col-result">Failed</td>
+          <td class="col-name">tests/test_consult_information_infractions.py::TestConsultInformationInfraction::test_EP1_CUR01535[404477902-1qazxsw2.]</td>
+          <td class="col-duration">38.91</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log">self = &lt;Utils.actions.Actions object at 0x00000193FC94F790&gt;, driver = &lt;selenium.webdriver.chrome.webdriver.WebDriver (session=&quot;94a4e4ecf18351e07892814910564a15&quot;)&gt;, element = (&#x27;xpath&#x27;, &quot;//p[contains(text(),&#x27;Menú&#x27;)]&quot;), time = 30<br/><br/>    def element_to_be_clickable(self, driver, element, time=TIME_SECONDS_UNIT):<br/>        try:<br/>&gt;           return WebDriverWait(driver, time).until(<br/>                EC.element_to_be_clickable(element)<br/>            )<br/><br/>Utils\actions.py:10: <br/>_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ <br/><br/>self = &lt;selenium.webdriver.support.wait.WebDriverWait (session=&quot;94a4e4ecf18351e07892814910564a15&quot;)&gt;, method = &lt;function element_to_be_clickable.&lt;locals&gt;._predicate at 0x00000193FB6C9120&gt;, message = &#x27;&#x27;<br/><br/>    def until(self, method, message: str = &quot;&quot;):<br/>        &quot;&quot;&quot;Calls the method provided with the driver as an argument until the \<br/>        return value does not evaluate to ``False``.<br/>    <br/>        :param method: callable(WebDriver)<br/>        :param message: optional message for :exc:`TimeoutException`<br/>        :returns: the result of the last call to `method`<br/>        :raises: :exc:`selenium.common.exceptions.TimeoutException` if timeout occurs<br/>        &quot;&quot;&quot;<br/>        screen = None<br/>        stacktrace = None<br/>    <br/>        end_time = time.monotonic() + self._timeout<br/>        while True:<br/>            try:<br/>                value = method(self._driver)<br/>                if value:<br/>                    return value<br/>            except self._ignored_exceptions as exc:<br/>                screen = getattr(exc, &quot;screen&quot;, None)<br/>                stacktrace = getattr(exc, &quot;stacktrace&quot;, None)<br/>            time.sleep(self._poll)<br/>            if time.monotonic() &gt; end_time:<br/>                break<br/>&gt;       raise TimeoutException(message, screen, stacktrace)<br/><span class="error">E       selenium.common.exceptions.TimeoutException: Message: </span><br/><span class="error">E       Stacktrace:</span><br/><span class="error">E       Backtrace:</span><br/><span class="error">E       	GetHandleVerifier [0x00FD8893+48451]</span><br/><span class="error">E       	(No symbol) [0x00F6B8A1]</span><br/><span class="error">E       	(No symbol) [0x00E75058]</span><br/><span class="error">E       	(No symbol) [0x00EA0467]</span><br/><span class="error">E       	(No symbol) [0x00EA069B]</span><br/><span class="error">E       	(No symbol) [0x00ECDD92]</span><br/><span class="error">E       	(No symbol) [0x00EBA304]</span><br/><span class="error">E       	(No symbol) [0x00ECC482]</span><br/><span class="error">E       	(No symbol) [0x00EBA0B6]</span><br/><span class="error">E       	(No symbol) [0x00E97E08]</span><br/><span class="error">E       	(No symbol) [0x00E98F2D]</span><br/><span class="error">E       	GetHandleVerifier [0x01238E3A+2540266]</span><br/><span class="error">E       	GetHandleVerifier [0x01278959+2801161]</span><br/><span class="error">E       	GetHandleVerifier [0x0127295C+2776588]</span><br/><span class="error">E       	GetHandleVerifier [0x01062280+612144]</span><br/><span class="error">E       	(No symbol) [0x00F74F6C]</span><br/><span class="error">E       	(No symbol) [0x00F711D8]</span><br/><span class="error">E       	(No symbol) [0x00F712BB]</span><br/><span class="error">E       	(No symbol) [0x00F64857]</span><br/><span class="error">E       	BaseThreadInitThunk [0x753C00C9+25]</span><br/><span class="error">E       	RtlGetAppContainerNamedObjectPath [0x774E7B4E+286]</span><br/><span class="error">E       	RtlGetAppContainerNamedObjectPath [0x774E7B1E+238]</span><br/><br/>..\..\..\..\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\selenium\webdriver\support\wait.py:95: TimeoutException<br/><br/>During handling of the above exception, another exception occurred:<br/><br/>self = &lt;test_consult_information_infractions.TestConsultInformationInfraction object at 0x00000193FC94D270&gt;, driver = &lt;selenium.webdriver.chrome.webdriver.WebDriver (session=&quot;94a4e4ecf18351e07892814910564a15&quot;)&gt;, username = &#x27;404477902&#x27;<br/>password = &#x27;1qazxsw2.&#x27;<br/><br/>    @pytest.mark.EP1_CUR01535<br/>    @pytest.mark.parametrize(&quot;username, password&quot;, [(&quot;404477902&quot;, &quot;1qazxsw2.&quot;)])<br/>    def test_EP1_CUR01535(self, driver, username, password):<br/>        self.UI_elements_text = set([&quot;Carnet Diplomático&quot;,&quot;Cédula Ciudadanía&quot;,&quot;Cédula de Extranjería&quot;,<br/>                                     &quot;NIT&quot;, &quot;Pasaporte&quot;, &quot;Permiso por Protección Temporal&quot;,<br/>                                     &quot;Registro Civil&quot;,&quot;TI2&quot;,&quot;Tarjeta de Identidad&quot;])<br/>&gt;       self.base(driver,username,password)<br/><br/>tests\test_consult_information_infractions.py:28: <br/>_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ <br/>tests\test_consult_information_infractions.py:17: in base<br/>    home_page.click_menu_button()<br/>pages\home_page.py:34: in click_menu_button<br/>    menu_button_element = self.actions.element_to_be_clickable(driver=self.driver, element=self.menu_button)<br/>_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ <br/><br/>self = &lt;Utils.actions.Actions object at 0x00000193FC94F790&gt;, driver = &lt;selenium.webdriver.chrome.webdriver.WebDriver (session=&quot;94a4e4ecf18351e07892814910564a15&quot;)&gt;, element = (&#x27;xpath&#x27;, &quot;//p[contains(text(),&#x27;Menú&#x27;)]&quot;), time = 30<br/><br/>    def element_to_be_clickable(self, driver, element, time=TIME_SECONDS_UNIT):<br/>        try:<br/>            return WebDriverWait(driver, time).until(<br/>                EC.element_to_be_clickable(element)<br/>            )<br/>        except TimeoutException:<br/>&gt;           raise Exception(f&quot;El elemento: {element}, no es clickeable después de {TIME_SECONDS_UNIT}&quot;)<br/><span class="error">E           Exception: El elemento: (&#x27;xpath&#x27;, &quot;//p[contains(text(),&#x27;Menú&#x27;)]&quot;), no es clickeable después de 30</span><br/><br/>Utils\actions.py:14: Exception<br/></div></td></tr></tbody>
+      <tbody class="failed results-table-row">
+        <tr>
+          <td class="col-result">Failed</td>
+          <td class="col-name">tests/test_consult_information_infractions.py::TestConsultInformationInfraction::test_EP2_CUR01535[404477902-1qazxsw2.]</td>
+          <td class="col-duration">38.13</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log">self = &lt;Utils.actions.Actions object at 0x00000193FCC53640&gt;, driver = &lt;selenium.webdriver.chrome.webdriver.WebDriver (session=&quot;01ed5074eeac6554e47b9ee1924d7329&quot;)&gt;, element = (&#x27;xpath&#x27;, &quot;//p[contains(text(),&#x27;Menú&#x27;)]&quot;), time = 30<br/><br/>    def element_to_be_clickable(self, driver, element, time=TIME_SECONDS_UNIT):<br/>        try:<br/>&gt;           return WebDriverWait(driver, time).until(<br/>                EC.element_to_be_clickable(element)<br/>            )<br/><br/>Utils\actions.py:10: <br/>_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ <br/><br/>self = &lt;selenium.webdriver.support.wait.WebDriverWait (session=&quot;01ed5074eeac6554e47b9ee1924d7329&quot;)&gt;, method = &lt;function element_to_be_clickable.&lt;locals&gt;._predicate at 0x00000193FC96ECB0&gt;, message = &#x27;&#x27;<br/><br/>    def until(self, method, message: str = &quot;&quot;):<br/>        &quot;&quot;&quot;Calls the method provided with the driver as an argument until the \<br/>        return value does not evaluate to ``False``.<br/>    <br/>        :param method: callable(WebDriver)<br/>        :param message: optional message for :exc:`TimeoutException`<br/>        :returns: the result of the last call to `method`<br/>        :raises: :exc:`selenium.common.exceptions.TimeoutException` if timeout occurs<br/>        &quot;&quot;&quot;<br/>        screen = None<br/>        stacktrace = None<br/>    <br/>        end_time = time.monotonic() + self._timeout<br/>        while True:<br/>            try:<br/>                value = method(self._driver)<br/>                if value:<br/>                    return value<br/>            except self._ignored_exceptions as exc:<br/>                screen = getattr(exc, &quot;screen&quot;, None)<br/>                stacktrace = getattr(exc, &quot;stacktrace&quot;, None)<br/>            time.sleep(self._poll)<br/>            if time.monotonic() &gt; end_time:<br/>                break<br/>&gt;       raise TimeoutException(message, screen, stacktrace)<br/><span class="error">E       selenium.common.exceptions.TimeoutException: Message: </span><br/><span class="error">E       Stacktrace:</span><br/><span class="error">E       Backtrace:</span><br/><span class="error">E       	GetHandleVerifier [0x00FD8893+48451]</span><br/><span class="error">E       	(No symbol) [0x00F6B8A1]</span><br/><span class="error">E       	(No symbol) [0x00E75058]</span><br/><span class="error">E       	(No symbol) [0x00EA0467]</span><br/><span class="error">E       	(No symbol) [0x00EA069B]</span><br/><span class="error">E       	(No symbol) [0x00ECDD92]</span><br/><span class="error">E       	(No symbol) [0x00EBA304]</span><br/><span class="error">E       	(No symbol) [0x00ECC482]</span><br/><span class="error">E       	(No symbol) [0x00EBA0B6]</span><br/><span class="error">E       	(No symbol) [0x00E97E08]</span><br/><span class="error">E       	(No symbol) [0x00E98F2D]</span><br/><span class="error">E       	GetHandleVerifier [0x01238E3A+2540266]</span><br/><span class="error">E       	GetHandleVerifier [0x01278959+2801161]</span><br/><span class="error">E       	GetHandleVerifier [0x0127295C+2776588]</span><br/><span class="error">E       	GetHandleVerifier [0x01062280+612144]</span><br/><span class="error">E       	(No symbol) [0x00F74F6C]</span><br/><span class="error">E       	(No symbol) [0x00F711D8]</span><br/><span class="error">E       	(No symbol) [0x00F712BB]</span><br/><span class="error">E       	(No symbol) [0x00F64857]</span><br/><span class="error">E       	BaseThreadInitThunk [0x753C00C9+25]</span><br/><span class="error">E       	RtlGetAppContainerNamedObjectPath [0x774E7B4E+286]</span><br/><span class="error">E       	RtlGetAppContainerNamedObjectPath [0x774E7B1E+238]</span><br/><br/>..\..\..\..\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\selenium\webdriver\support\wait.py:95: TimeoutException<br/><br/>During handling of the above exception, another exception occurred:<br/><br/>self = &lt;test_consult_information_infractions.TestConsultInformationInfraction object at 0x00000193FC94D540&gt;, driver = &lt;selenium.webdriver.chrome.webdriver.WebDriver (session=&quot;01ed5074eeac6554e47b9ee1924d7329&quot;)&gt;, username = &#x27;404477902&#x27;<br/>password = &#x27;1qazxsw2.&#x27;<br/><br/>    @pytest.mark.EP2_CUR01535<br/>    @pytest.mark.parametrize(&quot;username, password&quot;, [(&quot;404477902&quot;, &quot;1qazxsw2.&quot;)])<br/>    def test_EP2_CUR01535(self, driver, username, password):<br/>&gt;       self.base(driver,username,password)<br/><br/>tests\test_consult_information_infractions.py:41: <br/>_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ <br/>tests\test_consult_information_infractions.py:17: in base<br/>    home_page.click_menu_button()<br/>pages\home_page.py:34: in click_menu_button<br/>    menu_button_element = self.actions.element_to_be_clickable(driver=self.driver, element=self.menu_button)<br/>_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ <br/><br/>self = &lt;Utils.actions.Actions object at 0x00000193FCC53640&gt;, driver = &lt;selenium.webdriver.chrome.webdriver.WebDriver (session=&quot;01ed5074eeac6554e47b9ee1924d7329&quot;)&gt;, element = (&#x27;xpath&#x27;, &quot;//p[contains(text(),&#x27;Menú&#x27;)]&quot;), time = 30<br/><br/>    def element_to_be_clickable(self, driver, element, time=TIME_SECONDS_UNIT):<br/>        try:<br/>            return WebDriverWait(driver, time).until(<br/>                EC.element_to_be_clickable(element)<br/>            )<br/>        except TimeoutException:<br/>&gt;           raise Exception(f&quot;El elemento: {element}, no es clickeable después de {TIME_SECONDS_UNIT}&quot;)<br/><span class="error">E           Exception: El elemento: (&#x27;xpath&#x27;, &quot;//p[contains(text(),&#x27;Menú&#x27;)]&quot;), no es clickeable después de 30</span><br/><br/>Utils\actions.py:14: Exception<br/></div></td></tr></tbody>
+      <tbody class="failed results-table-row">
+        <tr>
+          <td class="col-result">Failed</td>
+          <td class="col-name">tests/test_consult_information_infractions.py::TestConsultInformationInfraction::test_EP6_CUR01535[404477902-1qazxsw2.]</td>
+          <td class="col-duration">63.71</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log">self = &lt;Utils.actions.Actions object at 0x00000193FCC91840&gt;, driver = &lt;selenium.webdriver.chrome.webdriver.WebDriver (session=&quot;2ede44a8b91175fe0a5c21673642f70b&quot;)&gt;, element = (&#x27;xpath&#x27;, &quot;//p[contains(text(),&#x27;Menú&#x27;)]&quot;), time = 30<br/><br/>    def element_to_be_clickable(self, driver, element, time=TIME_SECONDS_UNIT):<br/>        try:<br/>&gt;           return WebDriverWait(driver, time).until(<br/>                EC.element_to_be_clickable(element)<br/>            )<br/><br/>Utils\actions.py:10: <br/>_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ <br/><br/>self = &lt;selenium.webdriver.support.wait.WebDriverWait (session=&quot;2ede44a8b91175fe0a5c21673642f70b&quot;)&gt;, method = &lt;function element_to_be_clickable.&lt;locals&gt;._predicate at 0x00000193FC96F5B0&gt;, message = &#x27;&#x27;<br/><br/>    def until(self, method, message: str = &quot;&quot;):<br/>        &quot;&quot;&quot;Calls the method provided with the driver as an argument until the \<br/>        return value does not evaluate to ``False``.<br/>    <br/>        :param method: callable(WebDriver)<br/>        :param message: optional message for :exc:`TimeoutException`<br/>        :returns: the result of the last call to `method`<br/>        :raises: :exc:`selenium.common.exceptions.TimeoutException` if timeout occurs<br/>        &quot;&quot;&quot;<br/>        screen = None<br/>        stacktrace = None<br/>    <br/>        end_time = time.monotonic() + self._timeout<br/>        while True:<br/>            try:<br/>                value = method(self._driver)<br/>                if value:<br/>                    return value<br/>            except self._ignored_exceptions as exc:<br/>                screen = getattr(exc, &quot;screen&quot;, None)<br/>                stacktrace = getattr(exc, &quot;stacktrace&quot;, None)<br/>            time.sleep(self._poll)<br/>            if time.monotonic() &gt; end_time:<br/>                break<br/>&gt;       raise TimeoutException(message, screen, stacktrace)<br/><span class="error">E       selenium.common.exceptions.TimeoutException: Message: </span><br/><span class="error">E       Stacktrace:</span><br/><span class="error">E       Backtrace:</span><br/><span class="error">E       	GetHandleVerifier [0x00FD8893+48451]</span><br/><span class="error">E       	(No symbol) [0x00F6B8A1]</span><br/><span class="error">E       	(No symbol) [0x00E75058]</span><br/><span class="error">E       	(No symbol) [0x00EA0467]</span><br/><span class="error">E       	(No symbol) [0x00EA069B]</span><br/><span class="error">E       	(No symbol) [0x00ECDD92]</span><br/><span class="error">E       	(No symbol) [0x00EBA304]</span><br/><span class="error">E       	(No symbol) [0x00ECC482]</span><br/><span class="error">E       	(No symbol) [0x00EBA0B6]</span><br/><span class="error">E       	(No symbol) [0x00E97E08]</span><br/><span class="error">E       	(No symbol) [0x00E98F2D]</span><br/><span class="error">E       	GetHandleVerifier [0x01238E3A+2540266]</span><br/><span class="error">E       	GetHandleVerifier [0x01278959+2801161]</span><br/><span class="error">E       	GetHandleVerifier [0x0127295C+2776588]</span><br/><span class="error">E       	GetHandleVerifier [0x01062280+612144]</span><br/><span class="error">E       	(No symbol) [0x00F74F6C]</span><br/><span class="error">E       	(No symbol) [0x00F711D8]</span><br/><span class="error">E       	(No symbol) [0x00F712BB]</span><br/><span class="error">E       	(No symbol) [0x00F64857]</span><br/><span class="error">E       	BaseThreadInitThunk [0x753C00C9+25]</span><br/><span class="error">E       	RtlGetAppContainerNamedObjectPath [0x774E7B4E+286]</span><br/><span class="error">E       	RtlGetAppContainerNamedObjectPath [0x774E7B1E+238]</span><br/><br/>..\..\..\..\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\selenium\webdriver\support\wait.py:95: TimeoutException<br/><br/>During handling of the above exception, another exception occurred:<br/><br/>self = &lt;test_consult_information_infractions.TestConsultInformationInfraction object at 0x00000193FC94D930&gt;, driver = &lt;selenium.webdriver.chrome.webdriver.WebDriver (session=&quot;2ede44a8b91175fe0a5c21673642f70b&quot;)&gt;, username = &#x27;404477902&#x27;<br/>password = &#x27;1qazxsw2.&#x27;<br/><br/>    @pytest.mark.EP6_CUR01535<br/>    @pytest.mark.parametrize(&quot;username, password&quot;, [(&quot;404477902&quot;, &quot;1qazxsw2.&quot;)])<br/>    def test_EP6_CUR01535(self, driver, username, password):<br/>        &quot;&quot;&quot;<br/>        Validar que el sistema recupere todos los comparendos (Manuales y recuperados del SIMIT),<br/>        registrados por el establecimiento CIA y muestre la información en una tabla.<br/>        &quot;&quot;&quot;<br/>&gt;       self.base(driver,username,password)<br/><br/>tests\test_consult_information_infractions.py:73: <br/>_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ <br/>tests\test_consult_information_infractions.py:17: in base<br/>    home_page.click_menu_button()<br/>pages\home_page.py:34: in click_menu_button<br/>    menu_button_element = self.actions.element_to_be_clickable(driver=self.driver, element=self.menu_button)<br/>_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ <br/><br/>self = &lt;Utils.actions.Actions object at 0x00000193FCC91840&gt;, driver = &lt;selenium.webdriver.chrome.webdriver.WebDriver (session=&quot;2ede44a8b91175fe0a5c21673642f70b&quot;)&gt;, element = (&#x27;xpath&#x27;, &quot;//p[contains(text(),&#x27;Menú&#x27;)]&quot;), time = 30<br/><br/>    def element_to_be_clickable(self, driver, element, time=TIME_SECONDS_UNIT):<br/>        try:<br/>            return WebDriverWait(driver, time).until(<br/>                EC.element_to_be_clickable(element)<br/>            )<br/>        except TimeoutException:<br/>&gt;           raise Exception(f&quot;El elemento: {element}, no es clickeable después de {TIME_SECONDS_UNIT}&quot;)<br/><span class="error">E           Exception: El elemento: (&#x27;xpath&#x27;, &quot;//p[contains(text(),&#x27;Menú&#x27;)]&quot;), no es clickeable después de 30</span><br/><br/>Utils\actions.py:14: Exception<br/></div></td></tr></tbody>
+      <tbody class="failed results-table-row">
+        <tr>
+          <td class="col-result">Failed</td>
+          <td class="col-name">tests/test_consult_information_infractions.py::TestConsultInformationInfraction::test_EP9_CUR01535[404477902-1qazxsw2.]</td>
+          <td class="col-duration">40.55</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log">self = &lt;Utils.actions.Actions object at 0x00000193FCCC4220&gt;, driver = &lt;selenium.webdriver.chrome.webdriver.WebDriver (session=&quot;61c840834eb488ee12f8ff79b8bc6b9d&quot;)&gt;, element = (&#x27;xpath&#x27;, &quot;//p[contains(text(),&#x27;Menú&#x27;)]&quot;), time = 30<br/><br/>    def element_to_be_clickable(self, driver, element, time=TIME_SECONDS_UNIT):<br/>        try:<br/>&gt;           return WebDriverWait(driver, time).until(<br/>                EC.element_to_be_clickable(element)<br/>            )<br/><br/>Utils\actions.py:10: <br/>_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ <br/><br/>self = &lt;selenium.webdriver.support.wait.WebDriverWait (session=&quot;61c840834eb488ee12f8ff79b8bc6b9d&quot;)&gt;, method = &lt;function element_to_be_clickable.&lt;locals&gt;._predicate at 0x00000193FC96FAC0&gt;, message = &#x27;&#x27;<br/><br/>    def until(self, method, message: str = &quot;&quot;):<br/>        &quot;&quot;&quot;Calls the method provided with the driver as an argument until the \<br/>        return value does not evaluate to ``False``.<br/>    <br/>        :param method: callable(WebDriver)<br/>        :param message: optional message for :exc:`TimeoutException`<br/>        :returns: the result of the last call to `method`<br/>        :raises: :exc:`selenium.common.exceptions.TimeoutException` if timeout occurs<br/>        &quot;&quot;&quot;<br/>        screen = None<br/>        stacktrace = None<br/>    <br/>        end_time = time.monotonic() + self._timeout<br/>        while True:<br/>            try:<br/>                value = method(self._driver)<br/>                if value:<br/>                    return value<br/>            except self._ignored_exceptions as exc:<br/>                screen = getattr(exc, &quot;screen&quot;, None)<br/>                stacktrace = getattr(exc, &quot;stacktrace&quot;, None)<br/>            time.sleep(self._poll)<br/>            if time.monotonic() &gt; end_time:<br/>                break<br/>&gt;       raise TimeoutException(message, screen, stacktrace)<br/><span class="error">E       selenium.common.exceptions.TimeoutException: Message: </span><br/><span class="error">E       Stacktrace:</span><br/><span class="error">E       Backtrace:</span><br/><span class="error">E       	GetHandleVerifier [0x00FD8893+48451]</span><br/><span class="error">E       	(No symbol) [0x00F6B8A1]</span><br/><span class="error">E       	(No symbol) [0x00E75058]</span><br/><span class="error">E       	(No symbol) [0x00EA0467]</span><br/><span class="error">E       	(No symbol) [0x00EA069B]</span><br/><span class="error">E       	(No symbol) [0x00ECDD92]</span><br/><span class="error">E       	(No symbol) [0x00EBA304]</span><br/><span class="error">E       	(No symbol) [0x00ECC482]</span><br/><span class="error">E       	(No symbol) [0x00EBA0B6]</span><br/><span class="error">E       	(No symbol) [0x00E97E08]</span><br/><span class="error">E       	(No symbol) [0x00E98F2D]</span><br/><span class="error">E       	GetHandleVerifier [0x01238E3A+2540266]</span><br/><span class="error">E       	GetHandleVerifier [0x01278959+2801161]</span><br/><span class="error">E       	GetHandleVerifier [0x0127295C+2776588]</span><br/><span class="error">E       	GetHandleVerifier [0x01062280+612144]</span><br/><span class="error">E       	(No symbol) [0x00F74F6C]</span><br/><span class="error">E       	(No symbol) [0x00F711D8]</span><br/><span class="error">E       	(No symbol) [0x00F712BB]</span><br/><span class="error">E       	(No symbol) [0x00F64857]</span><br/><span class="error">E       	BaseThreadInitThunk [0x753C00C9+25]</span><br/><span class="error">E       	RtlGetAppContainerNamedObjectPath [0x774E7B4E+286]</span><br/><span class="error">E       	RtlGetAppContainerNamedObjectPath [0x774E7B1E+238]</span><br/><br/>..\..\..\..\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\selenium\webdriver\support\wait.py:95: TimeoutException<br/><br/>During handling of the above exception, another exception occurred:<br/><br/>self = &lt;test_consult_information_infractions.TestConsultInformationInfraction object at 0x00000193FC94DB10&gt;, driver = &lt;selenium.webdriver.chrome.webdriver.WebDriver (session=&quot;61c840834eb488ee12f8ff79b8bc6b9d&quot;)&gt;, username = &#x27;404477902&#x27;<br/>password = &#x27;1qazxsw2.&#x27;<br/><br/>    @pytest.mark.EP9_CUR01535<br/>    @pytest.mark.parametrize(&quot;username, password&quot;, [(&quot;404477902&quot;, &quot;1qazxsw2.&quot;)])<br/>    def test_EP9_CUR01535(self, driver, username, password):<br/>        &quot;&quot;&quot;<br/>        Consulta de Infracción - Validar la recuperación de todos los  comparendos - Opción &quot;Buscar&quot; - Actor CEA/OT.<br/>        &quot;&quot;&quot;<br/>&gt;       self.base(driver,username,password)<br/><br/>tests\test_consult_information_infractions.py:89: <br/>_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ <br/>tests\test_consult_information_infractions.py:17: in base<br/>    home_page.click_menu_button()<br/>pages\home_page.py:34: in click_menu_button<br/>    menu_button_element = self.actions.element_to_be_clickable(driver=self.driver, element=self.menu_button)<br/>_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ <br/><br/>self = &lt;Utils.actions.Actions object at 0x00000193FCCC4220&gt;, driver = &lt;selenium.webdriver.chrome.webdriver.WebDriver (session=&quot;61c840834eb488ee12f8ff79b8bc6b9d&quot;)&gt;, element = (&#x27;xpath&#x27;, &quot;//p[contains(text(),&#x27;Menú&#x27;)]&quot;), time = 30<br/><br/>    def element_to_be_clickable(self, driver, element, time=TIME_SECONDS_UNIT):<br/>        try:<br/>            return WebDriverWait(driver, time).until(<br/>                EC.element_to_be_clickable(element)<br/>            )<br/>        except TimeoutException:<br/>&gt;           raise Exception(f&quot;El elemento: {element}, no es clickeable después de {TIME_SECONDS_UNIT}&quot;)<br/><span class="error">E           Exception: El elemento: (&#x27;xpath&#x27;, &quot;//p[contains(text(),&#x27;Menú&#x27;)]&quot;), no es clickeable después de 30</span><br/><br/>Utils\actions.py:14: Exception<br/></div></td></tr></tbody>
+      <tbody class="failed results-table-row">
+        <tr>
+          <td class="col-result">Failed</td>
+          <td class="col-name">tests/test_consult_information_infractions.py::TestConsultInformationInfraction::test_EP11_CUR01535[404477902-1qazxsw2.]</td>
+          <td class="col-duration">38.05</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log">self = &lt;Utils.actions.Actions object at 0x00000193FCC45A80&gt;, driver = &lt;selenium.webdriver.chrome.webdriver.WebDriver (session=&quot;61c9acca54264e23ba97532172697da0&quot;)&gt;, element = (&#x27;xpath&#x27;, &quot;//p[contains(text(),&#x27;Menú&#x27;)]&quot;), time = 30<br/><br/>    def element_to_be_clickable(self, driver, element, time=TIME_SECONDS_UNIT):<br/>        try:<br/>&gt;           return WebDriverWait(driver, time).until(<br/>                EC.element_to_be_clickable(element)<br/>            )<br/><br/>Utils\actions.py:10: <br/>_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ <br/><br/>self = &lt;selenium.webdriver.support.wait.WebDriverWait (session=&quot;61c9acca54264e23ba97532172697da0&quot;)&gt;, method = &lt;function element_to_be_clickable.&lt;locals&gt;._predicate at 0x00000193FC96D750&gt;, message = &#x27;&#x27;<br/><br/>    def until(self, method, message: str = &quot;&quot;):<br/>        &quot;&quot;&quot;Calls the method provided with the driver as an argument until the \<br/>        return value does not evaluate to ``False``.<br/>    <br/>        :param method: callable(WebDriver)<br/>        :param message: optional message for :exc:`TimeoutException`<br/>        :returns: the result of the last call to `method`<br/>        :raises: :exc:`selenium.common.exceptions.TimeoutException` if timeout occurs<br/>        &quot;&quot;&quot;<br/>        screen = None<br/>        stacktrace = None<br/>    <br/>        end_time = time.monotonic() + self._timeout<br/>        while True:<br/>            try:<br/>                value = method(self._driver)<br/>                if value:<br/>                    return value<br/>            except self._ignored_exceptions as exc:<br/>                screen = getattr(exc, &quot;screen&quot;, None)<br/>                stacktrace = getattr(exc, &quot;stacktrace&quot;, None)<br/>            time.sleep(self._poll)<br/>            if time.monotonic() &gt; end_time:<br/>                break<br/>&gt;       raise TimeoutException(message, screen, stacktrace)<br/><span class="error">E       selenium.common.exceptions.TimeoutException: Message: </span><br/><span class="error">E       Stacktrace:</span><br/><span class="error">E       Backtrace:</span><br/><span class="error">E       	GetHandleVerifier [0x00FD8893+48451]</span><br/><span class="error">E       	(No symbol) [0x00F6B8A1]</span><br/><span class="error">E       	(No symbol) [0x00E75058]</span><br/><span class="error">E       	(No symbol) [0x00EA0467]</span><br/><span class="error">E       	(No symbol) [0x00EA069B]</span><br/><span class="error">E       	(No symbol) [0x00ECDD92]</span><br/><span class="error">E       	(No symbol) [0x00EBA304]</span><br/><span class="error">E       	(No symbol) [0x00ECC482]</span><br/><span class="error">E       	(No symbol) [0x00EBA0B6]</span><br/><span class="error">E       	(No symbol) [0x00E97E08]</span><br/><span class="error">E       	(No symbol) [0x00E98F2D]</span><br/><span class="error">E       	GetHandleVerifier [0x01238E3A+2540266]</span><br/><span class="error">E       	GetHandleVerifier [0x01278959+2801161]</span><br/><span class="error">E       	GetHandleVerifier [0x0127295C+2776588]</span><br/><span class="error">E       	GetHandleVerifier [0x01062280+612144]</span><br/><span class="error">E       	(No symbol) [0x00F74F6C]</span><br/><span class="error">E       	(No symbol) [0x00F711D8]</span><br/><span class="error">E       	(No symbol) [0x00F712BB]</span><br/><span class="error">E       	(No symbol) [0x00F64857]</span><br/><span class="error">E       	BaseThreadInitThunk [0x753C00C9+25]</span><br/><span class="error">E       	RtlGetAppContainerNamedObjectPath [0x774E7B4E+286]</span><br/><span class="error">E       	RtlGetAppContainerNamedObjectPath [0x774E7B1E+238]</span><br/><br/>..\..\..\..\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\selenium\webdriver\support\wait.py:95: TimeoutException<br/><br/>During handling of the above exception, another exception occurred:<br/><br/>self = &lt;test_consult_information_infractions.TestConsultInformationInfraction object at 0x00000193FC94DCF0&gt;, driver = &lt;selenium.webdriver.chrome.webdriver.WebDriver (session=&quot;61c9acca54264e23ba97532172697da0&quot;)&gt;, username = &#x27;404477902&#x27;<br/>password = &#x27;1qazxsw2.&#x27;<br/><br/>    @pytest.mark.EP11_CUR01535<br/>    @pytest.mark.parametrize(&quot;username, password&quot;, [(&quot;404477902&quot;, &quot;1qazxsw2.&quot;)])<br/>    def test_EP11_CUR01535(self, driver, username, password):<br/>        &quot;&quot;&quot;<br/>        Consulta de Infracción - Validar la recuperación de todos los  comparendos - Opción &quot;Buscar&quot; - Actor CEA/OT.<br/>        &quot;&quot;&quot;<br/>&gt;       self.base(driver,username,password)<br/><br/>tests\test_consult_information_infractions.py:107: <br/>_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ <br/>tests\test_consult_information_infractions.py:17: in base<br/>    home_page.click_menu_button()<br/>pages\home_page.py:34: in click_menu_button<br/>    menu_button_element = self.actions.element_to_be_clickable(driver=self.driver, element=self.menu_button)<br/>_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ <br/><br/>self = &lt;Utils.actions.Actions object at 0x00000193FCC45A80&gt;, driver = &lt;selenium.webdriver.chrome.webdriver.WebDriver (session=&quot;61c9acca54264e23ba97532172697da0&quot;)&gt;, element = (&#x27;xpath&#x27;, &quot;//p[contains(text(),&#x27;Menú&#x27;)]&quot;), time = 30<br/><br/>    def element_to_be_clickable(self, driver, element, time=TIME_SECONDS_UNIT):<br/>        try:<br/>            return WebDriverWait(driver, time).until(<br/>                EC.element_to_be_clickable(element)<br/>            )<br/>        except TimeoutException:<br/>&gt;           raise Exception(f&quot;El elemento: {element}, no es clickeable después de {TIME_SECONDS_UNIT}&quot;)<br/><span class="error">E           Exception: El elemento: (&#x27;xpath&#x27;, &quot;//p[contains(text(),&#x27;Menú&#x27;)]&quot;), no es clickeable después de 30</span><br/><br/>Utils\actions.py:14: Exception<br/></div></td></tr></tbody>
+      <tbody class="failed results-table-row">
+        <tr>
+          <td class="col-result">Failed</td>
+          <td class="col-name">tests/test_consult_information_infractions.py::TestConsultInformationInfraction::test_EP12_CUR01537[404477902-1qazxsw2.]</td>
+          <td class="col-duration">93.10</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log">FAILURE: [31m[Error Obligatory Mesage] Expected &lt;Para continuar con el proceso de firma, por favor ingrese a la ventana emergente que encontrará en la barra de tareas del equipo&gt; to be equal to &lt;El comparendo tiene curso programado&gt;, but was not.<br/>tests\test_consult_information_infractions.py:275 in test_EP12_CUR01537() -&gt; with check:<br/>[0m<br/>------------------------------------------------------------<br/>Failed Checks: 1<br/> ------------------------------Captured stdout call------------------------------ <br/>evidences/test_consult_information_infractions/EP12_CUR01537/EP12_CUR01537.png
+<br/> ------------------------------Captured stderr call------------------------------ <br/>C:\Users\ILanaLab\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\pywinauto\application.py:1085: UserWarning: 32-bit application should be automated using 32-bit Python (you use 64-bit Python)
+  warnings.warn(
+C:\Users\ILanaLab\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\pywinauto\application.py:1085: UserWarning: 32-bit application should be automated using 32-bit Python (you use 64-bit Python)
+  warnings.warn(
+<br/></div></td></tr></tbody>
+      <tbody class="failed results-table-row">
+        <tr>
+          <td class="col-result">Failed</td>
+          <td class="col-name">tests/test_consult_information_infractions.py::TestConsultInformationInfraction::test_EP25_CUR01537[404477902-1qazxsw2.]</td>
+          <td class="col-duration">67.69</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log">self = &lt;test_consult_information_infractions.TestConsultInformationInfraction object at 0x00000193FC94DA20&gt;, driver = &lt;selenium.webdriver.chrome.webdriver.WebDriver (session=&quot;3c96ecd0f4c6927ef331a54d9e34bfcc&quot;)&gt;, username = &#x27;404477902&#x27;<br/>password = &#x27;1qazxsw2.&#x27;<br/><br/>    @pytest.mark.EP25_CUR01537<br/>    @pytest.mark.parametrize(&quot;username, password&quot;, [(&quot;404477902&quot;, &quot;1qazxsw2.&quot;)])<br/>    def test_EP25_CUR01537(self, driver, username, password):<br/>        &quot;&quot;&quot;<br/>        Consulta de Infracción - Validar la recuperación de todos los  comparendos - Opción &quot;Buscar&quot; - Actor CEA/OT.<br/>        &quot;&quot;&quot;<br/>        self.base(driver,username,password)<br/>        search_information_page = PageFactory.create_page(driver, &quot;search_info&quot;)<br/>        time.sleep(10)<br/>        search_information_page.click_init_date()<br/>        time.sleep(5)<br/>        search_information_page.select_april_date()<br/>        search_information_page.click_end_date()<br/>        search_information_page.click_today_date()<br/>        search_information_page.click_search_button()<br/>        search_information_page.click_edit_until_edit_works()<br/>        time.sleep(5)<br/>        search_information_page.click_infraction_number_input()<br/>        search_information_page.delete_default_infraction_data()<br/>    <br/>        ticket_number = search_information_page.get_infraction_data()<br/>    <br/>&gt;       search_information_page.send_infraction_data(int(ticket_number)+1)<br/><span class="error">E       ValueError: invalid literal for int() with base 10: &#x27;&#x27;</span><br/><br/>tests\test_consult_information_infractions.py:303: ValueError<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">tests/test_consult_information_infractions.py::TestConsultInformationInfraction::test_EP3_CUR01535[404477902-1qazxsw2.]</td>
+          <td class="col-duration">53.12</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>evidences/test_consult_information_infractions/EP3_CUR01535/EP3_CUR01535.png
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">tests/test_consult_information_infractions.py::TestConsultInformationInfraction::test_EP13_CUR01535[404477902-1qazxsw2.]</td>
+          <td class="col-duration">39.93</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>evidences/test_consult_information_infractions/EP13_CUR01535/EP13_CUR01535.png
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">tests/test_consult_information_infractions.py::TestConsultInformationInfraction::test_EP3_CUR01537[404477902-1qazxsw2.]</td>
+          <td class="col-duration">67.47</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>evidences/test_consult_information_infractions/EP3_CUR01537/EP3_CUR01537.png
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">tests/test_consult_information_infractions.py::TestConsultInformationInfraction::test_EP4_CUR01537[404477902-1qazxsw2.]</td>
+          <td class="col-duration">73.38</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>evidences/test_consult_information_infractions/EP4_CUR01537/EP4_CUR01537.png
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">tests/test_consult_information_infractions.py::TestConsultInformationInfraction::test_EP5_CUR01537[404477902-1qazxsw2.]</td>
+          <td class="col-duration">71.84</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>23/5/2023
+evidences/test_consult_information_infractions/EP5_CUR01537/EP5_CUR01537.png
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">tests/test_consult_information_infractions.py::TestConsultInformationInfraction::test_EP6_CUR01537[404477902-1qazxsw2.]</td>
+          <td class="col-duration">73.44</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>evidences/test_consult_information_infractions/EP6_CUR01537/EP6_CUR01537.png
+<br/></div></td></tr></tbody></table></body></html>
