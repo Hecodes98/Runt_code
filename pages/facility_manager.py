@@ -47,12 +47,11 @@ class FacilityManagerPage:
     
 
     def click_accept_button_for_close_error_modal(self):
-        try:
-            close_modal = self.actions.element_to_be_clickable(driver=self.driver, element=self.close_error_button)
+        close_modal = self.actions.possible_element_to_be_clickable(driver=self.driver, element=self.close_error_button, time=10)
+        if close_modal:
             close_modal.click()
-        except TimeoutException:
-            return None
-
+        else:
+            return
     def click_new_room_button(self):
         new_room_element = self.actions.element_to_be_clickable(driver=self.driver, element=self.new_room_button)
         new_room_element.click()

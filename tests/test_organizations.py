@@ -9,18 +9,12 @@ import time
 
 
 class TestOrganization:
-    def test_login(self, driver):
-        login_page = PageFactory.create_page(driver, "login")
-        driver.get(BASE_URL)
-        login_page.fill_inputs_and_click_login("404477901", "1qazxsw2.")
-        time.sleep(15)
-        assert driver.current_url == "https://azspkdevstcus004.z19.web.core.windows.net/#/"
-
     def base_test(self, driver, username, password):
         login_page = PageFactory.create_page(driver, "login")
         driver.get(BASE_URL)
         login_page.fill_inputs_and_click_login(username, password)
         home_page = PageFactory.create_page(driver, "home")
+        home_page.click_close_tutorial_button()
         home_page.click_menu_button()
         home_page.click_search_information_option()
         home_page.click_organizations_option()

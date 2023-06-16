@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>report_consult_information.html</title>
+    <link href="assets/style.css" rel="stylesheet" type="text/css"/></head>
+  <body onLoad="init()">
+    <script>/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+function toArray(iter) {
+    if (iter === null) {
+        return null;
+    }
+    return Array.prototype.slice.call(iter);
+}
+
+function find(selector, elem) { // eslint-disable-line no-redeclare
+    if (!elem) {
+        elem = document;
+    }
+    return elem.querySelector(selector);
+}
+
+function findAll(selector, elem) {
+    if (!elem) {
+        elem = document;
+    }
+    return toArray(elem.querySelectorAll(selector));
+}
+
+function sortColumn(elem) {
+    toggleSortStates(elem);
+    const colIndex = toArray(elem.parentNode.childNodes).indexOf(elem);
+    let key;
+    if (elem.classList.contains('result')) {
+        key = keyResult;
+    } else if (elem.classList.contains('links')) {
+        key = keyLink;
+    } else {
+        key = keyAlpha;
+    }
+    sortTable(elem, key(colIndex));
+}
+
+function showAllExtras() { // eslint-disable-line no-unused-vars
+    findAll('.col-result').forEach(showExtras);
+}
+
+function hideAllExtras() { // eslint-disable-line no-unused-vars
+    findAll('.col-result').forEach(hideExtras);
+}
+
+function showExtras(colresultElem) {
+    const extras = colresultElem.parentNode.nextElementSibling;
+    const expandcollapse = colresultElem.firstElementChild;
+    extras.classList.remove('collapsed');
+    expandcollapse.classList.remove('expander');
+    expandcollapse.classList.add('collapser');
+}
+
+function hideExtras(colresultElem) {
+    const extras = colresultElem.parentNode.nextElementSibling;
+    const expandcollapse = colresultElem.firstElementChild;
+    extras.classList.add('collapsed');
+    expandcollapse.classList.remove('collapser');
+    expandcollapse.classList.add('expander');
+}
+
+function showFilters() {
+    let visibleString = getQueryParameter('visible') || 'all';
+    visibleString = visibleString.toLowerCase();
+    const checkedItems = visibleString.split(',');
+
+    const filterItems = document.getElementsByClassName('filter');
+    for (let i = 0; i < filterItems.length; i++) {
+        filterItems[i].hidden = false;
+
+        if (visibleString != 'all') {
+            filterItems[i].checked = checkedItems.includes(filterItems[i].getAttribute('data-test-result'));
+            filterTable(filterItems[i]);
+        }
+    }
+}
+
+function addCollapse() {
+    // Add links for show/hide all
+    const resulttable = find('table#results-table');
+    const showhideall = document.createElement('p');
+    showhideall.innerHTML = '<a href="javascript:showAllExtras()">Show all details</a> / ' +
+                            '<a href="javascript:hideAllExtras()">Hide all details</a>';
+    resulttable.parentElement.insertBefore(showhideall, resulttable);
+
+    // Add show/hide link to each result
+    findAll('.col-result').forEach(function(elem) {
+        const collapsed = getQueryParameter('collapsed') || 'Passed';
+        const extras = elem.parentNode.nextElementSibling;
+        const expandcollapse = document.createElement('span');
+        if (extras.classList.contains('collapsed')) {
+            expandcollapse.classList.add('expander');
+        } else if (collapsed.includes(elem.innerHTML)) {
+            extras.classList.add('collapsed');
+            expandcollapse.classList.add('expander');
+        } else {
+            expandcollapse.classList.add('collapser');
+        }
+        elem.appendChild(expandcollapse);
+
+        elem.addEventListener('click', function(event) {
+            if (event.currentTarget.parentNode.nextElementSibling.classList.contains('collapsed')) {
+                showExtras(event.currentTarget);
+            } else {
+                hideExtras(event.currentTarget);
+            }
+        });
+    });
+}
+
+function getQueryParameter(name) {
+    const match = RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search);
+    return match && decodeURIComponent(match[1].replace(/\+/g, ' '));
+}
+
+function init () { // eslint-disable-line no-unused-vars
+    resetSortHeaders();
+
+    addCollapse();
+
+    showFilters();
+
+    sortColumn(find('.initial-sort'));
+
+    findAll('.sortable').forEach(function(elem) {
+        elem.addEventListener('click',
+            function() {
+                sortColumn(elem);
+            }, false);
+    });
+}
+
+function sortTable(clicked, keyFunc) {
+    const rows = findAll('.results-table-row');
+    const reversed = !clicked.classList.contains('asc');
+    const sortedRows = sort(rows, keyFunc, reversed);
+    /* Whole table is removed here because browsers acts much slower
+     * when appending existing elements.
+     */
+    const thead = document.getElementById('results-table-head');
+    document.getElementById('results-table').remove();
+    const parent = document.createElement('table');
+    parent.id = 'results-table';
+    parent.appendChild(thead);
+    sortedRows.forEach(function(elem) {
+        parent.appendChild(elem);
+    });
+    document.getElementsByTagName('BODY')[0].appendChild(parent);
+}
+
+function sort(items, keyFunc, reversed) {
+    const sortArray = items.map(function(item, i) {
+        return [keyFunc(item), i];
+    });
+
+    sortArray.sort(function(a, b) {
+        const keyA = a[0];
+        const keyB = b[0];
+
+        if (keyA == keyB) return 0;
+
+        if (reversed) {
+            return keyA < keyB ? 1 : -1;
+        } else {
+            return keyA > keyB ? 1 : -1;
+        }
+    });
+
+    return sortArray.map(function(item) {
+        const index = item[1];
+        return items[index];
+    });
+}
+
+function keyAlpha(colIndex) {
+    return function(elem) {
+        return elem.childNodes[1].childNodes[colIndex].firstChild.data.toLowerCase();
+    };
+}
+
+function keyLink(colIndex) {
+    return function(elem) {
+        const dataCell = elem.childNodes[1].childNodes[colIndex].firstChild;
+        return dataCell == null ? '' : dataCell.innerText.toLowerCase();
+    };
+}
+
+function keyResult(colIndex) {
+    return function(elem) {
+        const strings = ['Error', 'Failed', 'Rerun', 'XFailed', 'XPassed',
+            'Skipped', 'Passed'];
+        return strings.indexOf(elem.childNodes[1].childNodes[colIndex].firstChild.data);
+    };
+}
+
+function resetSortHeaders() {
+    findAll('.sort-icon').forEach(function(elem) {
+        elem.parentNode.removeChild(elem);
+    });
+    findAll('.sortable').forEach(function(elem) {
+        const icon = document.createElement('div');
+        icon.className = 'sort-icon';
+        icon.textContent = 'vvv';
+        elem.insertBefore(icon, elem.firstChild);
+        elem.classList.remove('desc', 'active');
+        elem.classList.add('asc', 'inactive');
+    });
+}
+
+function toggleSortStates(elem) {
+    //if active, toggle between asc and desc
+    if (elem.classList.contains('active')) {
+        elem.classList.toggle('asc');
+        elem.classList.toggle('desc');
+    }
+
+    //if inactive, reset all other functions and add ascending active
+    if (elem.classList.contains('inactive')) {
+        resetSortHeaders();
+        elem.classList.remove('inactive');
+        elem.classList.add('active');
+    }
+}
+
+function isAllRowsHidden(value) {
+    return value.hidden == false;
+}
+
+function filterTable(elem) { // eslint-disable-line no-unused-vars
+    const outcomeAtt = 'data-test-result';
+    const outcome = elem.getAttribute(outcomeAtt);
+    const classOutcome = outcome + ' results-table-row';
+    const outcomeRows = document.getElementsByClassName(classOutcome);
+
+    for(let i = 0; i < outcomeRows.length; i++){
+        outcomeRows[i].hidden = !elem.checked;
+    }
+
+    const rows = findAll('.results-table-row').filter(isAllRowsHidden);
+    const allRowsHidden = rows.length == 0 ? true : false;
+    const notFoundMessage = document.getElementById('not-found-message');
+    notFoundMessage.hidden = !allRowsHidden;
+}
+</script>
+    <h1>report_consult_information.html</h1>
+    <p>Report generated on 16-Jun-2023 at 12:25:03 by <a href="https://pypi.python.org/pypi/pytest-html">pytest-html</a> v3.2.0</p>
+    <h2>Environment</h2>
+    <table id="environment">
+      <tr>
+        <td>Packages</td>
+        <td>{"pluggy": "1.0.0", "pytest": "7.2.2"}</td></tr>
+      <tr>
+        <td>Platform</td>
+        <td>Windows-10-10.0.19045-SP0</td></tr>
+      <tr>
+        <td>Plugins</td>
+        <td>{"check": "2.1.4", "html": "3.2.0", "html-reporter": "0.2.9", "metadata": "2.0.4"}</td></tr>
+      <tr>
+        <td>Python</td>
+        <td>3.10.11</td></tr></table>
+    <h2>Summary</h2>
+    <p>5 tests ran in 391.50 seconds. </p>
+    <p class="filter" hidden="true">(Un)check the boxes to filter the results.</p><input checked="true" class="filter" data-test-result="passed" disabled="true" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="passed">0 passed</span>, <input checked="true" class="filter" data-test-result="skipped" disabled="true" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="skipped">0 skipped</span>, <input checked="true" class="filter" data-test-result="failed" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="failed">5 failed</span>, <input checked="true" class="filter" data-test-result="error" disabled="true" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="error">0 errors</span>, <input checked="true" class="filter" data-test-result="xfailed" disabled="true" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="xfailed">0 expected failures</span>, <input checked="true" class="filter" data-test-result="xpassed" disabled="true" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="xpassed">0 unexpected passes</span>
+    <h2>Results</h2>
+    <table id="results-table">
+      <thead id="results-table-head">
+        <tr>
+          <th class="sortable result initial-sort" col="result">Result</th>
+          <th class="sortable" col="name">Test</th>
+          <th class="sortable" col="duration">Duration</th>
+          <th class="sortable links" col="links">Links</th></tr>
+        <tr hidden="true" id="not-found-message">
+          <th colspan="4">No results found. Try to check the filters</th></tr></thead>
+      <tbody class="failed results-table-row">
+        <tr>
+          <td class="col-result">Failed</td>
+          <td class="col-name">tests/test_assistant_registration.py::TestAssistantRegistration::test_attendee_registration_field_enable_comparendo_number_field[404477901-1qazxsw2.-12345678-]</td>
+          <td class="col-duration">81.35</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log">self = &lt;Utils.actions.Actions object at 0x000002A82147AA70&gt;, driver = &lt;selenium.webdriver.chrome.webdriver.WebDriver (session=&quot;dbd977b2e42679520aaf929a2a7289bb&quot;)&gt;, element = (&#x27;xpath&#x27;, &quot;//span[contains(text(),&#x27;Registrar Infracción&#x27;)]&quot;), time = 30<br/><br/>    def element_to_be_clickable(self, driver, element, time=TIME_SECONDS_UNIT):<br/>        try:<br/>&gt;           return WebDriverWait(driver, time).until(<br/>                EC.element_to_be_clickable(element)<br/>            )<br/><br/>Utils\actions.py:10: <br/>_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ <br/><br/>self = &lt;selenium.webdriver.support.wait.WebDriverWait (session=&quot;dbd977b2e42679520aaf929a2a7289bb&quot;)&gt;, method = &lt;function element_to_be_clickable.&lt;locals&gt;._predicate at 0x000002A8213C52D0&gt;, message = &#x27;&#x27;<br/><br/>    def until(self, method, message: str = &quot;&quot;):<br/>        &quot;&quot;&quot;Calls the method provided with the driver as an argument until the \<br/>        return value does not evaluate to ``False``.<br/>    <br/>        :param method: callable(WebDriver)<br/>        :param message: optional message for :exc:`TimeoutException`<br/>        :returns: the result of the last call to `method`<br/>        :raises: :exc:`selenium.common.exceptions.TimeoutException` if timeout occurs<br/>        &quot;&quot;&quot;<br/>        screen = None<br/>        stacktrace = None<br/>    <br/>        end_time = time.monotonic() + self._timeout<br/>        while True:<br/>            try:<br/>                value = method(self._driver)<br/>                if value:<br/>                    return value<br/>            except self._ignored_exceptions as exc:<br/>                screen = getattr(exc, &quot;screen&quot;, None)<br/>                stacktrace = getattr(exc, &quot;stacktrace&quot;, None)<br/>            time.sleep(self._poll)<br/>            if time.monotonic() &gt; end_time:<br/>                break<br/>&gt;       raise TimeoutException(message, screen, stacktrace)<br/><span class="error">E       selenium.common.exceptions.TimeoutException: Message: </span><br/><span class="error">E       Stacktrace:</span><br/><span class="error">E       Backtrace:</span><br/><span class="error">E       	GetHandleVerifier [0x0055A813+48355]</span><br/><span class="error">E       	(No symbol) [0x004EC4B1]</span><br/><span class="error">E       	(No symbol) [0x003F5358]</span><br/><span class="error">E       	(No symbol) [0x004209A5]</span><br/><span class="error">E       	(No symbol) [0x00420B3B]</span><br/><span class="error">E       	(No symbol) [0x0044E232]</span><br/><span class="error">E       	(No symbol) [0x0043A784]</span><br/><span class="error">E       	(No symbol) [0x0044C922]</span><br/><span class="error">E       	(No symbol) [0x0043A536]</span><br/><span class="error">E       	(No symbol) [0x004182DC]</span><br/><span class="error">E       	(No symbol) [0x004193DD]</span><br/><span class="error">E       	GetHandleVerifier [0x007BAABD+2539405]</span><br/><span class="error">E       	GetHandleVerifier [0x007FA78F+2800735]</span><br/><span class="error">E       	GetHandleVerifier [0x007F456C+2775612]</span><br/><span class="error">E       	GetHandleVerifier [0x005E51E0+616112]</span><br/><span class="error">E       	(No symbol) [0x004F5F8C]</span><br/><span class="error">E       	(No symbol) [0x004F2328]</span><br/><span class="error">E       	(No symbol) [0x004F240B]</span><br/><span class="error">E       	(No symbol) [0x004E4FF7]</span><br/><span class="error">E       	BaseThreadInitThunk [0x753C00C9+25]</span><br/><span class="error">E       	RtlGetAppContainerNamedObjectPath [0x774E7B4E+286]</span><br/><span class="error">E       	RtlGetAppContainerNamedObjectPath [0x774E7B1E+238]</span><br/><br/>..\..\..\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\selenium\webdriver\support\wait.py:95: TimeoutException<br/><br/>During handling of the above exception, another exception occurred:<br/><br/>self = &lt;test_assistant_registration.TestAssistantRegistration object at 0x000002A821478910&gt;, driver = &lt;selenium.webdriver.chrome.webdriver.WebDriver (session=&quot;dbd977b2e42679520aaf929a2a7289bb&quot;)&gt;, username = &#x27;404477901&#x27;, password = &#x27;1qazxsw2.&#x27;<br/>document_number = &#x27;12345678&#x27;, ticket_number = &#x27;&#x27;<br/><br/>    @pytest.mark.parametrize(&quot;username, password, document_number, ticket_number&quot;, [(&quot;404477901&quot;, &quot;1qazxsw2.&quot;,&quot;12345678&quot;, &quot;&quot;)])<br/>    @pytest.mark.EP1_CUR01505<br/>    def test_attendee_registration_field_enable_comparendo_number_field(self,driver, username, password, document_number, ticket_number):<br/>        &quot;&quot;&quot;<br/>        Verifica que el mensaje de error al no ingresar datos aparezca y que el campo comparendo se habilite<br/>        &quot;&quot;&quot;<br/>        assistant_registration_page = PageFactory.create_page(driver, &quot;assistant_registration&quot;)<br/>&gt;       self.base_test(driver, username, password, document_number, ticket_number ,assistant_registration_page)<br/><br/>tests\test_assistant_registration.py:37: <br/>_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ <br/>tests\test_assistant_registration.py:24: in base_test<br/>    assistant_registration_page.click_record_violation_button()<br/>pages\assistant_registration.py:73: in click_record_violation_button<br/>    record_violation_element = self.actions.element_to_be_clickable(driver=self.driver, element=self.record_violation)<br/>_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ <br/><br/>self = &lt;Utils.actions.Actions object at 0x000002A82147AA70&gt;, driver = &lt;selenium.webdriver.chrome.webdriver.WebDriver (session=&quot;dbd977b2e42679520aaf929a2a7289bb&quot;)&gt;, element = (&#x27;xpath&#x27;, &quot;//span[contains(text(),&#x27;Registrar Infracción&#x27;)]&quot;), time = 30<br/><br/>    def element_to_be_clickable(self, driver, element, time=TIME_SECONDS_UNIT):<br/>        try:<br/>            return WebDriverWait(driver, time).until(<br/>                EC.element_to_be_clickable(element)<br/>            )<br/>        except TimeoutException:<br/>&gt;           raise Exception(f&quot;El elemento: {element}, no es clickeable después de {TIME_SECONDS_UNIT}&quot;)<br/><span class="error">E           Exception: El elemento: (&#x27;xpath&#x27;, &quot;//span[contains(text(),&#x27;Registrar Infracción&#x27;)]&quot;), no es clickeable después de 30</span><br/><br/>Utils\actions.py:14: Exception<br/></div></td></tr></tbody>
+      <tbody class="failed results-table-row">
+        <tr>
+          <td class="col-result">Failed</td>
+          <td class="col-name">tests/test_assistant_registration.py::TestAssistantRegistration::test_attendee_registration_field_enable_infraction_number_field[404477901-1qazxsw2.-12345678-12345678901234567890]</td>
+          <td class="col-duration">80.65</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log">self = &lt;Utils.actions.Actions object at 0x000002A82155EE00&gt;, driver = &lt;selenium.webdriver.chrome.webdriver.WebDriver (session=&quot;54aa1caf28e198842cd3033c1940b482&quot;)&gt;, element = (&#x27;xpath&#x27;, &quot;//span[contains(text(),&#x27;Registrar Infracción&#x27;)]&quot;), time = 30<br/><br/>    def element_to_be_clickable(self, driver, element, time=TIME_SECONDS_UNIT):<br/>        try:<br/>&gt;           return WebDriverWait(driver, time).until(<br/>                EC.element_to_be_clickable(element)<br/>            )<br/><br/>Utils\actions.py:10: <br/>_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ <br/><br/>self = &lt;selenium.webdriver.support.wait.WebDriverWait (session=&quot;54aa1caf28e198842cd3033c1940b482&quot;)&gt;, method = &lt;function element_to_be_clickable.&lt;locals&gt;._predicate at 0x000002A8214C2440&gt;, message = &#x27;&#x27;<br/><br/>    def until(self, method, message: str = &quot;&quot;):<br/>        &quot;&quot;&quot;Calls the method provided with the driver as an argument until the \<br/>        return value does not evaluate to ``False``.<br/>    <br/>        :param method: callable(WebDriver)<br/>        :param message: optional message for :exc:`TimeoutException`<br/>        :returns: the result of the last call to `method`<br/>        :raises: :exc:`selenium.common.exceptions.TimeoutException` if timeout occurs<br/>        &quot;&quot;&quot;<br/>        screen = None<br/>        stacktrace = None<br/>    <br/>        end_time = time.monotonic() + self._timeout<br/>        while True:<br/>            try:<br/>                value = method(self._driver)<br/>                if value:<br/>                    return value<br/>            except self._ignored_exceptions as exc:<br/>                screen = getattr(exc, &quot;screen&quot;, None)<br/>                stacktrace = getattr(exc, &quot;stacktrace&quot;, None)<br/>            time.sleep(self._poll)<br/>            if time.monotonic() &gt; end_time:<br/>                break<br/>&gt;       raise TimeoutException(message, screen, stacktrace)<br/><span class="error">E       selenium.common.exceptions.TimeoutException: Message: </span><br/><span class="error">E       Stacktrace:</span><br/><span class="error">E       Backtrace:</span><br/><span class="error">E       	GetHandleVerifier [0x0055A813+48355]</span><br/><span class="error">E       	(No symbol) [0x004EC4B1]</span><br/><span class="error">E       	(No symbol) [0x003F5358]</span><br/><span class="error">E       	(No symbol) [0x004209A5]</span><br/><span class="error">E       	(No symbol) [0x00420B3B]</span><br/><span class="error">E       	(No symbol) [0x0044E232]</span><br/><span class="error">E       	(No symbol) [0x0043A784]</span><br/><span class="error">E       	(No symbol) [0x0044C922]</span><br/><span class="error">E       	(No symbol) [0x0043A536]</span><br/><span class="error">E       	(No symbol) [0x004182DC]</span><br/><span class="error">E       	(No symbol) [0x004193DD]</span><br/><span class="error">E       	GetHandleVerifier [0x007BAABD+2539405]</span><br/><span class="error">E       	GetHandleVerifier [0x007FA78F+2800735]</span><br/><span class="error">E       	GetHandleVerifier [0x007F456C+2775612]</span><br/><span class="error">E       	GetHandleVerifier [0x005E51E0+616112]</span><br/><span class="error">E       	(No symbol) [0x004F5F8C]</span><br/><span class="error">E       	(No symbol) [0x004F2328]</span><br/><span class="error">E       	(No symbol) [0x004F240B]</span><br/><span class="error">E       	(No symbol) [0x004E4FF7]</span><br/><span class="error">E       	BaseThreadInitThunk [0x753C00C9+25]</span><br/><span class="error">E       	RtlGetAppContainerNamedObjectPath [0x774E7B4E+286]</span><br/><span class="error">E       	RtlGetAppContainerNamedObjectPath [0x774E7B1E+238]</span><br/><br/>..\..\..\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\selenium\webdriver\support\wait.py:95: TimeoutException<br/><br/>During handling of the above exception, another exception occurred:<br/><br/>self = &lt;test_assistant_registration.TestAssistantRegistration object at 0x000002A821478CD0&gt;, driver = &lt;selenium.webdriver.chrome.webdriver.WebDriver (session=&quot;54aa1caf28e198842cd3033c1940b482&quot;)&gt;, username = &#x27;404477901&#x27;, password = &#x27;1qazxsw2.&#x27;<br/>document_number = &#x27;12345678&#x27;, ticket_number = &#x27;12345678901234567890&#x27;<br/><br/>    @pytest.mark.parametrize(&quot;username, password, document_number, ticket_number&quot;, [(&quot;404477901&quot;, &quot;1qazxsw2.&quot;,&quot;12345678&quot;, &quot;12345678901234567890&quot;)])<br/>    @pytest.mark.EP2_CUR01505<br/>    def test_attendee_registration_field_enable_infraction_number_field(self,driver, username, password, document_number, ticket_number):<br/>        &quot;&quot;&quot;<br/>        Verifica que el campo de infracción se habilite luego de ingresar un numero de comparendo de 20 caractéres<br/>        &quot;&quot;&quot;<br/>        assistant_registration_page = PageFactory.create_page(driver, &quot;assistant_registration&quot;)<br/>&gt;       self.base_test(driver, username, password, document_number, ticket_number ,assistant_registration_page)<br/><br/>tests\test_assistant_registration.py:50: <br/>_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ <br/>tests\test_assistant_registration.py:24: in base_test<br/>    assistant_registration_page.click_record_violation_button()<br/>pages\assistant_registration.py:73: in click_record_violation_button<br/>    record_violation_element = self.actions.element_to_be_clickable(driver=self.driver, element=self.record_violation)<br/>_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ <br/><br/>self = &lt;Utils.actions.Actions object at 0x000002A82155EE00&gt;, driver = &lt;selenium.webdriver.chrome.webdriver.WebDriver (session=&quot;54aa1caf28e198842cd3033c1940b482&quot;)&gt;, element = (&#x27;xpath&#x27;, &quot;//span[contains(text(),&#x27;Registrar Infracción&#x27;)]&quot;), time = 30<br/><br/>    def element_to_be_clickable(self, driver, element, time=TIME_SECONDS_UNIT):<br/>        try:<br/>            return WebDriverWait(driver, time).until(<br/>                EC.element_to_be_clickable(element)<br/>            )<br/>        except TimeoutException:<br/>&gt;           raise Exception(f&quot;El elemento: {element}, no es clickeable después de {TIME_SECONDS_UNIT}&quot;)<br/><span class="error">E           Exception: El elemento: (&#x27;xpath&#x27;, &quot;//span[contains(text(),&#x27;Registrar Infracción&#x27;)]&quot;), no es clickeable después de 30</span><br/><br/>Utils\actions.py:14: Exception<br/></div></td></tr></tbody>
+      <tbody class="failed results-table-row">
+        <tr>
+          <td class="col-result">Failed</td>
+          <td class="col-name">tests/test_assistant_registration.py::TestAssistantRegistration::test_attendee_registration_field_enable_comparendo_date[404477901-1qazxsw2.-12345678-12345678901234567890]</td>
+          <td class="col-duration">81.31</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log">self = &lt;Utils.actions.Actions object at 0x000002A8215C3220&gt;, driver = &lt;selenium.webdriver.chrome.webdriver.WebDriver (session=&quot;628e6b56e8032b9ea6db1932eee93fe0&quot;)&gt;, element = (&#x27;xpath&#x27;, &quot;//span[contains(text(),&#x27;Registrar Infracción&#x27;)]&quot;), time = 30<br/><br/>    def element_to_be_clickable(self, driver, element, time=TIME_SECONDS_UNIT):<br/>        try:<br/>&gt;           return WebDriverWait(driver, time).until(<br/>                EC.element_to_be_clickable(element)<br/>            )<br/><br/>Utils\actions.py:10: <br/>_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ <br/><br/>self = &lt;selenium.webdriver.support.wait.WebDriverWait (session=&quot;628e6b56e8032b9ea6db1932eee93fe0&quot;)&gt;, method = &lt;function element_to_be_clickable.&lt;locals&gt;._predicate at 0x000002A8214C2CB0&gt;, message = &#x27;&#x27;<br/><br/>    def until(self, method, message: str = &quot;&quot;):<br/>        &quot;&quot;&quot;Calls the method provided with the driver as an argument until the \<br/>        return value does not evaluate to ``False``.<br/>    <br/>        :param method: callable(WebDriver)<br/>        :param message: optional message for :exc:`TimeoutException`<br/>        :returns: the result of the last call to `method`<br/>        :raises: :exc:`selenium.common.exceptions.TimeoutException` if timeout occurs<br/>        &quot;&quot;&quot;<br/>        screen = None<br/>        stacktrace = None<br/>    <br/>        end_time = time.monotonic() + self._timeout<br/>        while True:<br/>            try:<br/>                value = method(self._driver)<br/>                if value:<br/>                    return value<br/>            except self._ignored_exceptions as exc:<br/>                screen = getattr(exc, &quot;screen&quot;, None)<br/>                stacktrace = getattr(exc, &quot;stacktrace&quot;, None)<br/>            time.sleep(self._poll)<br/>            if time.monotonic() &gt; end_time:<br/>                break<br/>&gt;       raise TimeoutException(message, screen, stacktrace)<br/><span class="error">E       selenium.common.exceptions.TimeoutException: Message: </span><br/><span class="error">E       Stacktrace:</span><br/><span class="error">E       Backtrace:</span><br/><span class="error">E       	GetHandleVerifier [0x0055A813+48355]</span><br/><span class="error">E       	(No symbol) [0x004EC4B1]</span><br/><span class="error">E       	(No symbol) [0x003F5358]</span><br/><span class="error">E       	(No symbol) [0x004209A5]</span><br/><span class="error">E       	(No symbol) [0x00420B3B]</span><br/><span class="error">E       	(No symbol) [0x0044E232]</span><br/><span class="error">E       	(No symbol) [0x0043A784]</span><br/><span class="error">E       	(No symbol) [0x0044C922]</span><br/><span class="error">E       	(No symbol) [0x0043A536]</span><br/><span class="error">E       	(No symbol) [0x004182DC]</span><br/><span class="error">E       	(No symbol) [0x004193DD]</span><br/><span class="error">E       	GetHandleVerifier [0x007BAABD+2539405]</span><br/><span class="error">E       	GetHandleVerifier [0x007FA78F+2800735]</span><br/><span class="error">E       	GetHandleVerifier [0x007F456C+2775612]</span><br/><span class="error">E       	GetHandleVerifier [0x005E51E0+616112]</span><br/><span class="error">E       	(No symbol) [0x004F5F8C]</span><br/><span class="error">E       	(No symbol) [0x004F2328]</span><br/><span class="error">E       	(No symbol) [0x004F240B]</span><br/><span class="error">E       	(No symbol) [0x004E4FF7]</span><br/><span class="error">E       	BaseThreadInitThunk [0x753C00C9+25]</span><br/><span class="error">E       	RtlGetAppContainerNamedObjectPath [0x774E7B4E+286]</span><br/><span class="error">E       	RtlGetAppContainerNamedObjectPath [0x774E7B1E+238]</span><br/><br/>..\..\..\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\selenium\webdriver\support\wait.py:95: TimeoutException<br/><br/>During handling of the above exception, another exception occurred:<br/><br/>self = &lt;test_assistant_registration.TestAssistantRegistration object at 0x000002A821478F70&gt;, driver = &lt;selenium.webdriver.chrome.webdriver.WebDriver (session=&quot;628e6b56e8032b9ea6db1932eee93fe0&quot;)&gt;, username = &#x27;404477901&#x27;, password = &#x27;1qazxsw2.&#x27;<br/>document_number = &#x27;12345678&#x27;, ticket_number = &#x27;12345678901234567890&#x27;<br/><br/>    @pytest.mark.parametrize(&quot;username, password, document_number, ticket_number&quot;, [(&quot;404477901&quot;, &quot;1qazxsw2.&quot;,&quot;12345678&quot;, &quot;12345678901234567890&quot;)])<br/>    @pytest.mark.EP3_CUR01505<br/>    def test_attendee_registration_field_enable_comparendo_date(self,driver, username, password, document_number, ticket_number):<br/>        &quot;&quot;&quot;<br/>        Verifica que el campo de fecha de comparendo se habilite luego de ingresar un numero de comparendo de 20 caractéres<br/>        &quot;&quot;&quot;<br/>        assistant_registration_page = PageFactory.create_page(driver, &quot;assistant_registration&quot;)<br/>&gt;       self.base_test(driver, username, password, document_number, ticket_number ,assistant_registration_page)<br/><br/>tests\test_assistant_registration.py:63: <br/>_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ <br/>tests\test_assistant_registration.py:24: in base_test<br/>    assistant_registration_page.click_record_violation_button()<br/>pages\assistant_registration.py:73: in click_record_violation_button<br/>    record_violation_element = self.actions.element_to_be_clickable(driver=self.driver, element=self.record_violation)<br/>_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ <br/><br/>self = &lt;Utils.actions.Actions object at 0x000002A8215C3220&gt;, driver = &lt;selenium.webdriver.chrome.webdriver.WebDriver (session=&quot;628e6b56e8032b9ea6db1932eee93fe0&quot;)&gt;, element = (&#x27;xpath&#x27;, &quot;//span[contains(text(),&#x27;Registrar Infracción&#x27;)]&quot;), time = 30<br/><br/>    def element_to_be_clickable(self, driver, element, time=TIME_SECONDS_UNIT):<br/>        try:<br/>            return WebDriverWait(driver, time).until(<br/>                EC.element_to_be_clickable(element)<br/>            )<br/>        except TimeoutException:<br/>&gt;           raise Exception(f&quot;El elemento: {element}, no es clickeable después de {TIME_SECONDS_UNIT}&quot;)<br/><span class="error">E           Exception: El elemento: (&#x27;xpath&#x27;, &quot;//span[contains(text(),&#x27;Registrar Infracción&#x27;)]&quot;), no es clickeable después de 30</span><br/><br/>Utils\actions.py:14: Exception<br/></div></td></tr></tbody>
+      <tbody class="failed results-table-row">
+        <tr>
+          <td class="col-result">Failed</td>
+          <td class="col-name">tests/test_assistant_registration.py::TestAssistantRegistration::test_attendee_registration_field_enable_entity[404477901-1qazxsw2.-12345678-12345678901234567890]</td>
+          <td class="col-duration">79.87</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log">self = &lt;Utils.actions.Actions object at 0x000002A81FCEF670&gt;, driver = &lt;selenium.webdriver.chrome.webdriver.WebDriver (session=&quot;73f42eb5e59c8e4af4927514195525e2&quot;)&gt;, element = (&#x27;xpath&#x27;, &quot;//span[contains(text(),&#x27;Registrar Infracción&#x27;)]&quot;), time = 30<br/><br/>    def element_to_be_clickable(self, driver, element, time=TIME_SECONDS_UNIT):<br/>        try:<br/>&gt;           return WebDriverWait(driver, time).until(<br/>                EC.element_to_be_clickable(element)<br/>            )<br/><br/>Utils\actions.py:10: <br/>_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ <br/><br/>self = &lt;selenium.webdriver.support.wait.WebDriverWait (session=&quot;73f42eb5e59c8e4af4927514195525e2&quot;)&gt;, method = &lt;function element_to_be_clickable.&lt;locals&gt;._predicate at 0x000002A8214C3130&gt;, message = &#x27;&#x27;<br/><br/>    def until(self, method, message: str = &quot;&quot;):<br/>        &quot;&quot;&quot;Calls the method provided with the driver as an argument until the \<br/>        return value does not evaluate to ``False``.<br/>    <br/>        :param method: callable(WebDriver)<br/>        :param message: optional message for :exc:`TimeoutException`<br/>        :returns: the result of the last call to `method`<br/>        :raises: :exc:`selenium.common.exceptions.TimeoutException` if timeout occurs<br/>        &quot;&quot;&quot;<br/>        screen = None<br/>        stacktrace = None<br/>    <br/>        end_time = time.monotonic() + self._timeout<br/>        while True:<br/>            try:<br/>                value = method(self._driver)<br/>                if value:<br/>                    return value<br/>            except self._ignored_exceptions as exc:<br/>                screen = getattr(exc, &quot;screen&quot;, None)<br/>                stacktrace = getattr(exc, &quot;stacktrace&quot;, None)<br/>            time.sleep(self._poll)<br/>            if time.monotonic() &gt; end_time:<br/>                break<br/>&gt;       raise TimeoutException(message, screen, stacktrace)<br/><span class="error">E       selenium.common.exceptions.TimeoutException: Message: </span><br/><span class="error">E       Stacktrace:</span><br/><span class="error">E       Backtrace:</span><br/><span class="error">E       	GetHandleVerifier [0x0055A813+48355]</span><br/><span class="error">E       	(No symbol) [0x004EC4B1]</span><br/><span class="error">E       	(No symbol) [0x003F5358]</span><br/><span class="error">E       	(No symbol) [0x004209A5]</span><br/><span class="error">E       	(No symbol) [0x00420B3B]</span><br/><span class="error">E       	(No symbol) [0x0044E232]</span><br/><span class="error">E       	(No symbol) [0x0043A784]</span><br/><span class="error">E       	(No symbol) [0x0044C922]</span><br/><span class="error">E       	(No symbol) [0x0043A536]</span><br/><span class="error">E       	(No symbol) [0x004182DC]</span><br/><span class="error">E       	(No symbol) [0x004193DD]</span><br/><span class="error">E       	GetHandleVerifier [0x007BAABD+2539405]</span><br/><span class="error">E       	GetHandleVerifier [0x007FA78F+2800735]</span><br/><span class="error">E       	GetHandleVerifier [0x007F456C+2775612]</span><br/><span class="error">E       	GetHandleVerifier [0x005E51E0+616112]</span><br/><span class="error">E       	(No symbol) [0x004F5F8C]</span><br/><span class="error">E       	(No symbol) [0x004F2328]</span><br/><span class="error">E       	(No symbol) [0x004F240B]</span><br/><span class="error">E       	(No symbol) [0x004E4FF7]</span><br/><span class="error">E       	BaseThreadInitThunk [0x753C00C9+25]</span><br/><span class="error">E       	RtlGetAppContainerNamedObjectPath [0x774E7B4E+286]</span><br/><span class="error">E       	RtlGetAppContainerNamedObjectPath [0x774E7B1E+238]</span><br/><br/>..\..\..\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\selenium\webdriver\support\wait.py:95: TimeoutException<br/><br/>During handling of the above exception, another exception occurred:<br/><br/>self = &lt;test_assistant_registration.TestAssistantRegistration object at 0x000002A821479210&gt;, driver = &lt;selenium.webdriver.chrome.webdriver.WebDriver (session=&quot;73f42eb5e59c8e4af4927514195525e2&quot;)&gt;, username = &#x27;404477901&#x27;, password = &#x27;1qazxsw2.&#x27;<br/>document_number = &#x27;12345678&#x27;, ticket_number = &#x27;12345678901234567890&#x27;<br/><br/>    @pytest.mark.parametrize(&quot;username, password, document_number, ticket_number&quot;, [(&quot;404477901&quot;, &quot;1qazxsw2.&quot;,&quot;12345678&quot;, &quot;12345678901234567890&quot;)])<br/>    @pytest.mark.EP4_CUR01505<br/>    def test_attendee_registration_field_enable_entity(self,driver, username, password, document_number, ticket_number):<br/>        &quot;&quot;&quot;<br/>        Verifica que el campo de entidad se habilite luego de ingresar un numero de comparendo de 20 caractéres<br/>        &quot;&quot;&quot;<br/>        assistant_registration_page = PageFactory.create_page(driver, &quot;assistant_registration&quot;)<br/>&gt;       self.base_test(driver, username, password, document_number, ticket_number ,assistant_registration_page)<br/><br/>tests\test_assistant_registration.py:76: <br/>_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ <br/>tests\test_assistant_registration.py:24: in base_test<br/>    assistant_registration_page.click_record_violation_button()<br/>pages\assistant_registration.py:73: in click_record_violation_button<br/>    record_violation_element = self.actions.element_to_be_clickable(driver=self.driver, element=self.record_violation)<br/>_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ <br/><br/>self = &lt;Utils.actions.Actions object at 0x000002A81FCEF670&gt;, driver = &lt;selenium.webdriver.chrome.webdriver.WebDriver (session=&quot;73f42eb5e59c8e4af4927514195525e2&quot;)&gt;, element = (&#x27;xpath&#x27;, &quot;//span[contains(text(),&#x27;Registrar Infracción&#x27;)]&quot;), time = 30<br/><br/>    def element_to_be_clickable(self, driver, element, time=TIME_SECONDS_UNIT):<br/>        try:<br/>            return WebDriverWait(driver, time).until(<br/>                EC.element_to_be_clickable(element)<br/>            )<br/>        except TimeoutException:<br/>&gt;           raise Exception(f&quot;El elemento: {element}, no es clickeable después de {TIME_SECONDS_UNIT}&quot;)<br/><span class="error">E           Exception: El elemento: (&#x27;xpath&#x27;, &quot;//span[contains(text(),&#x27;Registrar Infracción&#x27;)]&quot;), no es clickeable después de 30</span><br/><br/>Utils\actions.py:14: Exception<br/></div></td></tr></tbody>
+      <tbody class="failed results-table-row">
+        <tr>
+          <td class="col-result">Failed</td>
+          <td class="col-name">tests/test_assistant_registration.py::TestAssistantRegistration::test_attendee_registration_field_enable_transit_organism[404477901-1qazxsw2.-12345678-12345678901234567890]</td>
+          <td class="col-duration">58.81</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log">self = &lt;test_assistant_registration.TestAssistantRegistration object at 0x000002A8214794B0&gt;, driver = &lt;selenium.webdriver.chrome.webdriver.WebDriver (session=&quot;f1e75bc7da2f135d4c4d67de5e5b1439&quot;)&gt;, username = &#x27;404477901&#x27;, password = &#x27;1qazxsw2.&#x27;<br/>document_number = &#x27;12345678&#x27;, ticket_number = &#x27;12345678901234567890&#x27;<br/><br/>    @pytest.mark.parametrize(&quot;username, password, document_number, ticket_number&quot;, [(&quot;404477901&quot;, &quot;1qazxsw2.&quot;,&quot;12345678&quot;, &quot;12345678901234567890&quot;)])<br/>    @pytest.mark.EP5_CUR01505<br/>    def test_attendee_registration_field_enable_transit_organism(self,driver, username, password, document_number, ticket_number):<br/>        &quot;&quot;&quot;<br/>        Verifica que el campo de Organismo de Transito se habilite luego de ingresar un numero de comparendo de 20 caractéres<br/>        &quot;&quot;&quot;<br/>        assistant_registration_page = PageFactory.create_page(driver, &quot;assistant_registration&quot;)<br/>&gt;       self.base_test(driver, username, password, document_number, ticket_number ,assistant_registration_page)<br/><br/>tests\test_assistant_registration.py:89: <br/>_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ <br/>tests\test_assistant_registration.py:24: in base_test<br/>    assistant_registration_page.click_record_violation_button()<br/>pages\assistant_registration.py:73: in click_record_violation_button<br/>    record_violation_element = self.actions.element_to_be_clickable(driver=self.driver, element=self.record_violation)<br/>Utils\actions.py:10: in element_to_be_clickable<br/>    return WebDriverWait(driver, time).until(<br/>..\..\..\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\selenium\webdriver\support\wait.py:86: in until<br/>    value = method(self._driver)<br/>..\..\..\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\selenium\webdriver\support\expected_conditions.py:335: in _predicate<br/>    target = visibility_of(target)(driver)<br/>..\..\..\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\selenium\webdriver\support\expected_conditions.py:156: in _predicate<br/>    return _element_if_visible(element)<br/>_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ <br/><br/>element = None, visibility = True<br/><br/>    def _element_if_visible(element, visibility=True):<br/>&gt;       return element if element.is_displayed() == visibility else False<br/><span class="error">E       AttributeError: &#x27;NoneType&#x27; object has no attribute &#x27;is_displayed&#x27;</span><br/><br/>..\..\..\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\site-packages\selenium\webdriver\support\expected_conditions.py:162: AttributeError<br/></div></td></tr></tbody></table></body></html>

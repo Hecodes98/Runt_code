@@ -23,6 +23,7 @@ class HomePage:
         self.attendance_cancellation_menu_option = (By.CSS_SELECTOR, "a[href='#/ciascursos/cursos/agenda']")
         self.income_register_menu_option = (By.CSS_SELECTOR, "a[href='#/ciascursos/cursos/agenda'")
         self.outcome_register_menu_option = (By.CSS_SELECTOR, "a[href='#/ciascursos/cursos/agenda'")
+        self.close_tutorial_button = (By.ID, "exitTour")
 
 
     def click_logout(self):
@@ -70,3 +71,12 @@ class HomePage:
     def click_courses_scheduling_option(self):
         scheduling_option = self.actions.element_to_be_clickable(driver=self.driver, element=self.scheduling_menu_option)
         scheduling_option.click()
+
+    def click_close_tutorial_button(self):
+        close_tutorial_button_option = self.actions.possible_element_to_be_clickable(driver=self.driver, element=self.close_tutorial_button, time=15)
+        if close_tutorial_button_option:
+            close_tutorial_button_option.click()
+        else: 
+            return
+
+    

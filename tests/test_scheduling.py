@@ -15,6 +15,7 @@ class TestScheduling:
         driver.get(BASE_URL)
         login_page.fill_inputs_and_click_login(username, password)
         home_page = PageFactory.create_page(driver, "home")
+        home_page.click_close_tutorial_button()
         home_page.click_menu_button()
         home_page.click_courses_menu_option()
         home_page.click_courses_scheduling_option()
