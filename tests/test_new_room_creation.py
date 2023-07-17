@@ -14,7 +14,7 @@ class TestNewRoomCreation:
     def login(self, driver):
         login_page = PageFactory.create_page(driver, "login")
         driver.get(BASE_URL)
-        login_page.fill_inputs_and_click_login("404477901", "1qazxsw2.")
+        login_page.fill_inputs_and_click_login("404477902", "1qazxsw2.23")
 
     def base(self,driver):
         self.login(driver)

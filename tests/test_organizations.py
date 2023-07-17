@@ -20,7 +20,7 @@ class TestOrganization:
         home_page.click_organizations_option()
     
     @pytest.mark.EP1_CUR01506
-    @pytest.mark.parametrize("username, password", [("404477905", "1qazxsw2.")])
+    @pytest.mark.parametrize("username, password", [("404477902", "1qazxsw2.23")])
     def test_organizations_validate_parametrized_date(self,driver, username, password):
         """
         Ingresar con actor "Funcionario MT o Superintendencia de Transporte" para consultar 
@@ -35,7 +35,7 @@ class TestOrganization:
         SaveScreenshots.save_screenshot(driver, ORGANIZATIONS_BASE, "EP1_CUR01506")
         time.sleep(5)
 
-    @pytest.mark.parametrize("username, password", [("404477905", "1qazxsw2.")])
+    @pytest.mark.parametrize("username, password", [("404477902", "1qazxsw2.23")])
     @pytest.mark.EP2_CUR01506
     def test_organizations_document_cc_type(self,driver, username, password):
         """
@@ -52,7 +52,7 @@ class TestOrganization:
         SaveScreenshots.save_screenshot(driver, ORGANIZATIONS_BASE, "EP2_CUR01506")
         time.sleep(5)  
     
-    @pytest.mark.parametrize("username, password, document_number", [("404477905", "1qazxsw2.", "900739999")])
+    @pytest.mark.parametrize("username, password, document_number", [("404477902", "1qazxsw2.23", "900739999")])
     @pytest.mark.EP3_CUR01506
     def test_organizations_document_nit_type_right_data(self,driver, username, password, document_number):
         """
@@ -69,7 +69,7 @@ class TestOrganization:
         SaveScreenshots.save_screenshot(driver, ORGANIZATIONS_BASE, "EP3_CUR01506")
         time.sleep(5)
 
-    @pytest.mark.parametrize("username, password, document_number", [("404477905", "1qazxsw2.", "900739999")])
+    @pytest.mark.parametrize("username, password, document_number", [("404477902", "1qazxsw2.23", "900739999")])
     @pytest.mark.EP8_CUR01506
     def test_organizations_click_clean_button(self,driver, username, password, document_number):
         """
@@ -86,7 +86,7 @@ class TestOrganization:
         SaveScreenshots.save_screenshot(driver, ORGANIZATIONS_BASE, "EP8_CUR01506")
         time.sleep(5) 
 
-    @pytest.mark.parametrize("username, password, document_number", [("404477905", "1qazxsw2.", "3563231")])
+    @pytest.mark.parametrize("username, password, document_number", [("404477902", "1qazxsw2.23", "3563231")])
     @pytest.mark.EP10_CUR01506
     def test_organizations_wrong_document_number(self,driver, username, password, document_number):
         """
@@ -103,7 +103,7 @@ class TestOrganization:
         SaveScreenshots.save_screenshot(driver, ORGANIZATIONS_BASE, "EP10_CUR01506")
         time.sleep(5) 
 
-    @pytest.mark.parametrize("username, password", [("404477901", "1qazxsw2.")])
+    @pytest.mark.parametrize("username, password", [("404477901", "1qazxsw2.23")])
     def test_organizations_commercial_registration_number(self,driver, username, password):
         """
         Verifica que el mensaje de error al no ingresar datos aparezca

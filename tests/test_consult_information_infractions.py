@@ -21,7 +21,7 @@ class TestConsultInformationInfraction:
         
 
     @pytest.mark.EP1_CUR01535
-    @pytest.mark.parametrize("username, password", [("404477902", "1qazxsw2.")])
+    @pytest.mark.parametrize("username, password", [("404477902", "1qazxsw2.23")])
     def test_EP1_CUR01535(self, driver, username, password):
         self.UI_elements_text = set(["Carnet Diplomático","Cédula Ciudadanía","Cédula de Extranjería",
                                      "NIT", "Pasaporte", "Permiso por Protección Temporal",
@@ -32,12 +32,12 @@ class TestConsultInformationInfraction:
         search_information_page.click_select_input()
         with check:
             assert_that(search_information_page.get_all_dropdown_options(UI_elements=self.UI_elements_text)).is_true()
-        SaveScreenshots.save_screenshot(driver, SEARCH_INFORMATION_BASE, "EP1_CUR01535")
+        #SaveScreenshots.save_screenshot(driver, SEARCH_INFORMATION_BASE, "EP1_CUR01535")
     
         time.sleep(10)
 
     @pytest.mark.EP2_CUR01535
-    @pytest.mark.parametrize("username, password", [("404477902", "1qazxsw2.")])
+    @pytest.mark.parametrize("username, password", [("404477902", "1qazxsw2.23")])
     def test_EP2_CUR01535(self, driver, username, password):
         self.base(driver,username,password)
         search_information_page = PageFactory.create_page(driver, "search_info")
@@ -46,11 +46,11 @@ class TestConsultInformationInfraction:
         error_text = search_information_page.get_ticket_number_error()
         with check:
             assert_that(error_text).described_as("Error Obligatory Mesage").is_equal_to("- Número de Comparendo es obligatorio")
-        SaveScreenshots.save_screenshot(driver, SEARCH_INFORMATION_BASE, "EP2_CUR01535")
+        #SaveScreenshots.save_screenshot(driver, SEARCH_INFORMATION_BASE, "EP2_CUR01535")
         time.sleep(10)
 
     @pytest.mark.EP3_CUR01535
-    @pytest.mark.parametrize("username, password", [("404477902", "1qazxsw2.")])
+    @pytest.mark.parametrize("username, password", [("404477902", "1qazxsw2.23")])
     def test_EP3_CUR01535(self, driver, username, password):
         """
         Consultar Infracciones registradas por el establecimiento 
@@ -61,11 +61,11 @@ class TestConsultInformationInfraction:
         time.sleep(10)
         search_information_page.send_ticket_initial_date("6/4/2001")
         search_information_page.send_ticket_final_date("10/4/2001")
-        SaveScreenshots.save_screenshot(driver, SEARCH_INFORMATION_BASE, "EP3_CUR01535")
+        #SaveScreenshots.save_screenshot(driver, SEARCH_INFORMATION_BASE, "EP3_CUR01535")
         time.sleep(5)
     
     @pytest.mark.EP6_CUR01535
-    @pytest.mark.parametrize("username, password", [("404477902", "1qazxsw2.")])
+    @pytest.mark.parametrize("username, password", [("404477902", "1qazxsw2.23")])
     def test_EP6_CUR01535(self, driver, username, password):
         """
         Validar que el sistema recupere todos los comparendos (Manuales y recuperados del SIMIT),
@@ -78,11 +78,11 @@ class TestConsultInformationInfraction:
         error_text = search_information_page.get_ticket_number_error()
         with check:
             assert_that(error_text).described_as("Error Obligatory Mesage").is_equal_to("- Número de Comparendo es obligatorio")
-        SaveScreenshots.save_screenshot(driver, SEARCH_INFORMATION_BASE, "EP6_CUR01535")
+        #SaveScreenshots.save_screenshot(driver, SEARCH_INFORMATION_BASE, "EP6_CUR01535")
         time.sleep(10)
     
     @pytest.mark.EP9_CUR01535
-    @pytest.mark.parametrize("username, password", [("404477902", "1qazxsw2.")])
+    @pytest.mark.parametrize("username, password", [("404477902", "1qazxsw2.23")])
     def test_EP9_CUR01535(self, driver, username, password):
         """
         Consulta de Infracción - Validar la recuperación de todos los  comparendos - Opción "Buscar" - Actor CEA/OT.
@@ -100,7 +100,7 @@ class TestConsultInformationInfraction:
         time.sleep(10)
 
     @pytest.mark.EP11_CUR01535
-    @pytest.mark.parametrize("username, password", [("404477902", "1qazxsw2.")])
+    @pytest.mark.parametrize("username, password", [("404477902", "1qazxsw2.23")])
     def test_EP11_CUR01535(self, driver, username, password):
         """
         Consulta de Infracción - Validar la recuperación de todos los  comparendos - Opción "Buscar" - Actor CEA/OT.
@@ -121,7 +121,7 @@ class TestConsultInformationInfraction:
         time.sleep(10)
 
     @pytest.mark.EP13_CUR01535
-    @pytest.mark.parametrize("username, password", [("404477902", "1qazxsw2.")])
+    @pytest.mark.parametrize("username, password", [("404477902", "1qazxsw2.23")])
     def test_EP13_CUR01535(self, driver, username, password):
         """
         Consulta de Infracción - Validar la recuperación de todos los  comparendos - Opción "Buscar" - Actor CEA/OT.
@@ -139,7 +139,7 @@ class TestConsultInformationInfraction:
         time.sleep(10)
 
     @pytest.mark.EP3_CUR01537
-    @pytest.mark.parametrize("username, password", [("404477902", "1qazxsw2.")])
+    @pytest.mark.parametrize("username, password", [("404477902", "1qazxsw2.23")])
     def test_EP3_CUR01537(self, driver, username, password):
         """
         Consulta de Infracción - Validar la recuperación de todos los  comparendos - Opción "Buscar" - Actor CEA/OT.
@@ -160,7 +160,7 @@ class TestConsultInformationInfraction:
         time.sleep(10)
 
     @pytest.mark.EP3_CUR01537
-    @pytest.mark.parametrize("username, password", [("404477902", "1qazxsw2.")])
+    @pytest.mark.parametrize("username, password", [("404477902", "1qazxsw2.23")])
     def test_EP3_CUR01537(self, driver, username, password):
         """
         Consulta de Infracción - Validar la recuperación de todos los  comparendos - Opción "Buscar" - Actor CEA/OT.
@@ -181,7 +181,7 @@ class TestConsultInformationInfraction:
         time.sleep(10)
 
     @pytest.mark.EP4_CUR01537
-    @pytest.mark.parametrize("username, password", [("404477902", "1qazxsw2.")])
+    @pytest.mark.parametrize("username, password", [("404477902", "1qazxsw2.23")])
     def test_EP4_CUR01537(self, driver, username, password):
         """
         Consulta de Infracción - Validar la recuperación de todos los  comparendos - Opción "Buscar" - Actor CEA/OT.
@@ -204,7 +204,7 @@ class TestConsultInformationInfraction:
         time.sleep(10)
 
     @pytest.mark.EP5_CUR01537
-    @pytest.mark.parametrize("username, password", [("404477902", "1qazxsw2.")])
+    @pytest.mark.parametrize("username, password", [("404477902", "1qazxsw2.23")])
     def test_EP5_CUR01537(self, driver, username, password):
         """
         Consulta de Infracción - Validar la recuperación de todos los  comparendos - Opción "Buscar" - Actor CEA/OT.
@@ -226,7 +226,7 @@ class TestConsultInformationInfraction:
         time.sleep(10)
 
     @pytest.mark.EP6_CUR01537
-    @pytest.mark.parametrize("username, password", [("404477902", "1qazxsw2.")])
+    @pytest.mark.parametrize("username, password", [("404477902", "1qazxsw2.23")])
     def test_EP6_CUR01537(self, driver, username, password):
         """
         Consulta de Infracción - Validar la recuperación de todos los  comparendos - Opción "Buscar" - Actor CEA/OT.
@@ -247,7 +247,7 @@ class TestConsultInformationInfraction:
         time.sleep(10)
 
     @pytest.mark.EP12_CUR01537
-    @pytest.mark.parametrize("username, password", [("404477902", "1qazxsw2.")])
+    @pytest.mark.parametrize("username, password", [("404477902", "1qazxsw2.23")])
     def test_EP12_CUR01537(self, driver, username, password):
         """
         Consulta de Infracción - Validar la recuperación de todos los  comparendos - Opción "Buscar" - Actor CEA/OT.
@@ -280,7 +280,7 @@ class TestConsultInformationInfraction:
         time.sleep(10)
 
     @pytest.mark.EP25_CUR01537
-    @pytest.mark.parametrize("username, password", [("404477902", "1qazxsw2.")])
+    @pytest.mark.parametrize("username, password", [("404477902", "1qazxsw2.23")])
     def test_EP25_CUR01537(self, driver, username, password):
         """
         Consulta de Infracción - Validar la recuperación de todos los  comparendos - Opción "Buscar" - Actor CEA/OT.
