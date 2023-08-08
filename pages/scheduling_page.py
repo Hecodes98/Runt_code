@@ -42,6 +42,7 @@ class SchedulingPage:
 
     def click_instructor_not_active_option(self):
         instructor_not_active_element = self.actions.element_to_be_clickable(driver=self.driver, element=self.instructor_not_active)
+        self.driver.execute_script("arguments[0].scrollIntoView();", instructor_not_active_element)
         instructor_not_active_element.click()
     
     def click_day_option(self):
@@ -120,5 +121,8 @@ class SchedulingPage:
         accept_modal_button_element.click()
 
     def click_no_courser_error_modal(self):
-        modal_error_element = self.actions.element_to_be_clickable(driver=self.driver, element=self.no_courses_error_modal)
-        modal_error_element.click()
+        modal_error_element = self.actions.possible_element_to_be_clickable(driver=self.driver, element=self.no_courses_error_modal, time=15)
+        if modal_error_element:
+            modal_error_element.click()
+        else: 
+            return

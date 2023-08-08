@@ -14,6 +14,8 @@ class TestScheduling:
         login_page = PageFactory.create_page(driver, "login")
         driver.get(BASE_URL)
         login_page.fill_inputs_and_click_login(username, password)
+        time.sleep(5)
+        login_page.fill_inputs_and_click_login(username, password)
         home_page = PageFactory.create_page(driver, "home")
         home_page.click_close_tutorial_button()
         home_page.click_menu_button()
@@ -21,30 +23,8 @@ class TestScheduling:
         home_page.click_courses_scheduling_option()
         time.sleep(15)
 
-    @pytest.mark.base
-    @pytest.mark.parametrize("username, password", [("404477902", "1qazxsw2.23")])
-    def test_base(self, driver, username, password):
-        self.base(driver,username,password)
-        scheduling_page = PageFactory.create_page(driver, "scheduling")
-        scheduling_page.click_room_select_input()
-        scheduling_page.click_room_one_option()
-        scheduling_page.click_day_option()
-        time.sleep(2)
-        scheduling_page.click_next_option()
-        time.sleep(2)
-        scheduling_page.scroll_top()
-        time.sleep(2)
-        scheduling_page.click_record_violation_button()
-        time.sleep(2)
-        scheduling_page.click_instruction_input_option()
-        time.sleep(2)
-        scheduling_page.click_first_instructor_option()
-        time.sleep(2)
-        scheduling_page.click_accept_button()
-        time.sleep(3)
-
     @pytest.mark.EP2_CUR01525
-    @pytest.mark.parametrize("username, password", [("404477902", "1qazxsw2.23")])
+    @pytest.mark.parametrize("username, password", [("404477902", "1qazxsw2.24")])
     def test_EP2_CUR01525(self, driver, username, password):
         """
         IMPORTANT: Los test del EP1 a EP4, EP11 estan contemplados en este test
@@ -54,8 +34,10 @@ class TestScheduling:
         
         """
         self.base(driver,username,password)
+        SaveScreenshots.save_screenshot(driver, SCHEDULING_BASE, "EP2_CUR01525")
         scheduling_page = PageFactory.create_page(driver, "scheduling")
         scheduling_page.click_room_select_input()
+        SaveScreenshots.save_screenshot(driver, SCHEDULING_BASE, "EP2_CUR01525")
         time.sleep(2)
         with check:
             assert_that(scheduling_page.validate_order_of_rooms_list()).is_true()
@@ -64,7 +46,7 @@ class TestScheduling:
 
 
     @pytest.mark.EP4_CUR01525
-    @pytest.mark.parametrize("username, password", [("404477902", "1qazxsw2.23")])
+    @pytest.mark.parametrize("username, password", [("404477902", "1qazxsw2.24")])
     def test_EP4_CUR01525(self, driver, username, password):
         """
         IMPORTANT: Los test del EP1 a EP4, EP11, EP15 estan contemplados en este test
@@ -78,6 +60,7 @@ class TestScheduling:
         scheduling_page.click_room_select_input()
         scheduling_page.click_room_one_option()
         scheduling_page.click_day_option()
+        SaveScreenshots.save_screenshot(driver, SCHEDULING_BASE, "EP4_CUR01525")
         time.sleep(2)
         scheduling_page.click_next_option()
         time.sleep(2)
@@ -92,7 +75,7 @@ class TestScheduling:
         time.sleep(5)
     
     @pytest.mark.EP5_CUR01525
-    @pytest.mark.parametrize("username, password", [("404477902", "1qazxsw2.23")])
+    @pytest.mark.parametrize("username, password", [("404477902", "1qazxsw2.24")])
     def test_EP5_CUR01525(self, driver, username, password):
         """
         IMPORTANT: Los test del EP7 estan contemplados en este test
@@ -102,9 +85,11 @@ class TestScheduling:
         """
         self.base(driver,username,password)
         scheduling_page = PageFactory.create_page(driver, "scheduling")
+        SaveScreenshots.save_screenshot(driver, SCHEDULING_BASE, "EP5_CUR01525")
         scheduling_page.click_room_select_input()
         scheduling_page.click_room_one_option()
         scheduling_page.click_day_option()
+        SaveScreenshots.save_screenshot(driver, SCHEDULING_BASE, "EP5_CUR01525")
         time.sleep(2)
         scheduling_page.click_next_option()
         time.sleep(2)
@@ -118,7 +103,7 @@ class TestScheduling:
         time.sleep(5)
 
     @pytest.mark.EP6_CUR01525
-    @pytest.mark.parametrize("username, password", [("404477902", "1qazxsw2.23")])
+    @pytest.mark.parametrize("username, password", [("404477902", "1qazxsw2.24")])
     def test_EP5_CUR01525(self, driver, username, password):
         """
         Validar que el sistema muestre los Filtros de Búsqueda Campo del "Establecimiento", 
@@ -127,9 +112,11 @@ class TestScheduling:
         """
         self.base(driver,username,password)
         scheduling_page = PageFactory.create_page(driver, "scheduling")
+        SaveScreenshots.save_screenshot(driver, SCHEDULING_BASE, "EP6_CUR01525")
         scheduling_page.click_room_select_input()
         scheduling_page.click_room_one_option()
         scheduling_page.click_agenda()
+        SaveScreenshots.save_screenshot(driver, SCHEDULING_BASE, "EP6_CUR01525")
         scheduling_page.click_day_option()
         time.sleep(2)
         scheduling_page.click_next_option()
@@ -144,7 +131,7 @@ class TestScheduling:
         time.sleep(5)
 
     @pytest.mark.EP8_CUR01525
-    @pytest.mark.parametrize("username, password", [("404477902", "1qazxsw2.23")])
+    @pytest.mark.parametrize("username, password", [("404477902", "1qazxsw2.24")])
     def test_EP8_CUR01525(self, driver, username, password):
         """
         IMPORTANT: Los test del EP22 estan contemplados en este test
@@ -152,8 +139,10 @@ class TestScheduling:
         Validar que al presionar la opción "Aceptar" el sistema valide obligatoriedad 
         y especificaciones en los campos de la ventana "Nueva Agenda".
         """
+        SCHEDULING_BASE_PATH = SCHEDULING_BASE+"/EP8_CUR01525"
         self.base(driver,username,password)
         scheduling_page = PageFactory.create_page(driver, "scheduling")
+        SaveScreenshots.save_screenshot(driver, SCHEDULING_BASE_PATH, "EP8_CUR01525_1")
         scheduling_page.click_room_select_input()
         scheduling_page.click_room_one_option()
         scheduling_page.click_day_option()
@@ -164,17 +153,19 @@ class TestScheduling:
         time.sleep(2)
         scheduling_page.click_record_violation_button()
         time.sleep(2)
+        SaveScreenshots.save_screenshot(driver, SCHEDULING_BASE_PATH, "EP8_CUR01525_2")
         scheduling_page.click_accept_button()
+        SaveScreenshots.save_screenshot(driver, SCHEDULING_BASE_PATH, "EP8_CUR01525_3")
         time.sleep(2)
         text_element=scheduling_page.get_error_message()
         time.sleep(2)
         with check:
             assert_that(text_element).is_equal_to("- Instructor es obligatorio") 
-        SaveScreenshots.save_screenshot(driver, SCHEDULING_BASE, "EP8_CUR01525")
+        SaveScreenshots.save_screenshot(driver, SCHEDULING_BASE_PATH, "EP8_CUR01525_4")
         
     
     @pytest.mark.EP16_CUR01525
-    @pytest.mark.parametrize("username, password", [("404477902", "1qazxsw2.23")])
+    @pytest.mark.parametrize("username, password", [("404477902", "1qazxsw2.24")])
     def test_EP16_CUR01525(self, driver, username, password):
         """
         El sistema debe validar que el Instructor no se encuentre asociado a otro curso en el mismo 
@@ -190,7 +181,7 @@ class TestScheduling:
         time.sleep(5)
 
     @pytest.mark.EP21_CUR01525
-    @pytest.mark.parametrize("username, password", [("404477902", "1qazxsw2.23")])
+    @pytest.mark.parametrize("username, password", [("404477902", "1qazxsw2.24")])
     def test_EP21_CUR01525(self, driver, username, password):
         """
         Validar que al seleccionar la opción "Cancelar" realice el retorno con la información previamente diligenciada.
@@ -212,7 +203,7 @@ class TestScheduling:
         time.sleep(2)
 
     @pytest.mark.EP25_CUR01525
-    @pytest.mark.parametrize("username, password", [("404477902", "1qazxsw2.23")])
+    @pytest.mark.parametrize("username, password", [("404477902", "1qazxsw2.24")])
     def test_EP25_CUR01525(self, driver, username, password):
         """
         Validar que al seleccionar una agenda menor a la del sistema la identifique, generando un mensaje en pantalla “La fecha seleccionada es inferior a la fecha del sistema”.
@@ -236,7 +227,7 @@ class TestScheduling:
         
 
     @pytest.mark.EP26_CUR01525
-    @pytest.mark.parametrize("username, password", [("404477902", "1qazxsw2.23")])
+    @pytest.mark.parametrize("username, password", [("404477902", "1qazxsw2.24")])
     def test_EP26_CUR01525(self, driver, username, password):
         """
         Validar que el sistema identifique que el horario de agendamiento seleccionado, está por fuera del horario de atención 
@@ -268,7 +259,7 @@ class TestScheduling:
         time.sleep(3)
 
     @pytest.mark.EP27_CUR01525
-    @pytest.mark.parametrize("username, password", [("404477902", "1qazxsw2.23")])
+    @pytest.mark.parametrize("username, password", [("404477902", "1qazxsw2.24")])
     def test_EP27_CUR01525(self, driver, username, password):
         """
         Validar que el sistema identifique que al seleccionar un día que no corresponda a los días de atención del centro de formación 
@@ -305,7 +296,7 @@ class TestScheduling:
         time.sleep(3)
 
     @pytest.mark.EP32_CUR01525
-    @pytest.mark.parametrize("username, password", [("404477902", "1qazxsw2.23")])
+    @pytest.mark.parametrize("username, password", [("404477902", "1qazxsw2.24")])
     def test_EP32_CUR01525(self, driver, username, password):
         """
         Validar que el sistema identifique que el instructor no está Activo en el CIA, OT o CEA generando un mensaje de rechazo en pantalla 

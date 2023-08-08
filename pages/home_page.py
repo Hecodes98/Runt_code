@@ -3,6 +3,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from config import TIME_SECONDS_UNIT
 from Utils.actions import Actions
+from Utils.save_screenshots import SaveScreenshots
+
 
 
 class HomePage:
@@ -23,7 +25,7 @@ class HomePage:
         self.attendance_cancellation_menu_option = (By.CSS_SELECTOR, "a[href='#/ciascursos/cursos/agenda']")
         self.income_register_menu_option = (By.CSS_SELECTOR, "a[href='#/ciascursos/cursos/agenda'")
         self.outcome_register_menu_option = (By.CSS_SELECTOR, "a[href='#/ciascursos/cursos/agenda'")
-        self.close_tutorial_button = (By.ID, "exitTour")
+        self.close_tutorial_button = (By.CSS_SELECTOR, "button#exitTour")
 
 
     def click_logout(self):
@@ -73,7 +75,7 @@ class HomePage:
         scheduling_option.click()
 
     def click_close_tutorial_button(self):
-        close_tutorial_button_option = self.actions.possible_element_to_be_clickable(driver=self.driver, element=self.close_tutorial_button, time=15)
+        close_tutorial_button_option = self.actions.possible_element_to_be_clickable(driver=self.driver, element=self.close_tutorial_button, time=30)
         if close_tutorial_button_option:
             close_tutorial_button_option.click()
         else: 

@@ -2,6 +2,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from config import TIME_SECONDS_UNIT
+from Utils.save_screenshots import SaveScreenshots
+
 
 
 class LoginPage:
