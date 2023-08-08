@@ -9,6 +9,7 @@ class DateGenerator:
     
     @staticmethod
     def get_date_minus_parameter_days():
+        print((date.today() - timedelta(days=DAYS_AGO)).strftime("%Y-%m-%d"))
         return (date.today() - timedelta(days=DAYS_AGO)).strftime("%Y-%m-%d")
 
     @staticmethod

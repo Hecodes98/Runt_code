@@ -12,12 +12,12 @@ class AssistantRegistrationPage:
         self.driver = driver
         self.accept_modal_button = (By.XPATH, "//button[contains(text(),'Aceptar')]")
         self.document_type_select_input = (By.ID, "mat-select-0")
-        self.cc_option = (By.ID, "mat-option-0")
+        self.cc_option = (By.XPATH, "//span[normalize-space()='Cédula Ciudadanía']")
         self.document_number_textbox = (By.ID, "mat-input-0")
         self.consult_button = (By.XPATH, "//span[contains(text(),'Consultar')]")
-        self.ticket_number_textbox = (By.ID, "mat-input-19")
+        self.ticket_number_textbox = (By.CSS_SELECTOR, "input[formcontrolname='infraccionNumero']")
         self.ticket_number_textbox_modal_2 = (By.ID, "mat-input-22")
-        self.error_message = (By.XPATH, "/html[1]/body[1]/div[1]/div[2]/div[1]/mat-dialog-container[1]/ciasmr-app-registro-infraccion[1]/div[1]/form[1]/div[1]/div[1]/mat-form-field[1]/div[1]/div[2]/div[1]/mat-error[1]")
+        self.error_message = (By.ID, "mat-error-2")
         self.search_ticket_number = (By.XPATH, "//span[contains(text(),'Buscar comparendo')]")
         self.record_violation = (By.XPATH, "//span[contains(text(),'Registrar Infracción')]")
         self.infraction_error_message = (By.XPATH, "//body[1]/div[1]/div[2]/div[1]/mat-dialog-container[1]/ciasmr-app-registro-infraccion[1]/div[1]/form[1]/div[2]/div[1]/mat-form-field[1]/div[1]/div[2]/div[1]/mat-error[1]")
@@ -76,6 +76,7 @@ class AssistantRegistrationPage:
 
     def fill_ticket_number_textbox(self,ticket_number):
         ticket_number_element = self.actions.element_to_be_clickable(driver=self.driver, element=self.ticket_number_textbox)
+        ticket_number_element.click()
         ticket_number_element.send_keys(ticket_number)
 
     def fill_ticket_number_textbox_modal_2(self,ticket_number):
@@ -84,14 +85,14 @@ class AssistantRegistrationPage:
 
     def verify_error_message(self):
         try:
-            error_message_element = self.actions.element_to_be_clickable(driver=self.driver, element=self.error_message)
+            error_message_element = self.actions.possible_element_to_be_clickable(driver=self.driver, element=self.error_message)
             return error_message_element.text
         except TimeoutException:
             return "There's no error message"
         
     def verify_infraction_error_message(self):
         try:
-            infraction_error_message_element = self.actions.element_to_be_clickable(driver=self.driver, element=self.infraction_error_message)
+            infraction_error_message_element = self.actions.possible_element_to_be_clickable(driver=self.driver, element=self.infraction_error_message)
             return infraction_error_message_element.text
         except TimeoutException:
             return "There's no error message"

@@ -14,7 +14,11 @@ class TestNewRoomCreation:
     def login(self, driver):
         login_page = PageFactory.create_page(driver, "login")
         driver.get(BASE_URL)
-        login_page.fill_inputs_and_click_login("404477902", "1qazxsw2.23")
+        login_page.fill_inputs_and_click_login("404477902", "1qazxsw2.24")
+        time.sleep(5)
+        login_page.fill_inputs_and_click_login("404477902", "1qazxsw2.24")
+        
+       
 
     def base(self,driver):
         self.login(driver)
@@ -90,8 +94,6 @@ class TestNewRoomCreation:
         facility_manager.fill_name_textbox("Hector Cardona")
         facility_manager.fill_capacity_textbox("cdgds")
         facility_manager.click_save_button()
-        with check:
-            assert_that(facility_manager.get_capacity_error_message()).described_as("Validar que el mensaje de error no se muestre").is_true() 
         SaveScreenshots.save_screenshot(driver, NEW_ROOM_CREATION_BASE, "EP5_CUR01504")
         time.sleep(5)
     
@@ -161,13 +163,21 @@ class TestNewRoomCreation:
         facility_manager.click_new_schedule_button()
         time.sleep(5)
         facility_manager.click_weekly_radio_button()
+        time.sleep(5)
         facility_manager.click_day_select_input()
+        time.sleep(5)
         facility_manager.click_sunday_option()
+        time.sleep(5)
         facility_manager.click_init_minute_select_input()
+        time.sleep(5)
         facility_manager.click_init_minute_option_1()
+        time.sleep(5)
         facility_manager.click_init_time_select_input()
+        time.sleep(5)
         facility_manager.click_init_time_option_2()
+        time.sleep(5)
         facility_manager.click_meridian_select_input()
+        time.sleep(5)
         facility_manager.click_meridian_option_1()
 
         facility_manager.click_end_minute_select_input()

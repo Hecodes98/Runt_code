@@ -19,8 +19,8 @@ class SchedulingPage:
         self.next_option_button = (By.XPATH, "//button[contains(text(),'>')]")
         self.back_option_button = (By.XPATH, "//button[contains(text(),'<')]")
         self.time_selection_option = (By.XPATH, "//tbody/tr[7]/td[2]")
-        self.instructor_select_input = (By.XPATH, "//mat-select[@id='mat-select-2']")
-        self.first_instructor_option = (By.XPATH, "//span[contains(text(),'CYDEQ LQCELYS')]")
+        self.instructor_select_input = (By.CSS_SELECTOR, "mat-select[formcontrolname='instructor']")
+        self.first_instructor_option = (By.XPATH, "//span[contains(text(),'BEOTWQJ')]")
         self.accept_button = (By.XPATH, "//span[contains(text(),'Aceptar')]")
         self.accept_modal_button = (By.XPATH, "//body[1]/div[3]/div[1]/div[6]/button[1]")
         self.cancel_button = (By.XPATH, "//span[contains(text(),'Cancelar')]")
@@ -74,6 +74,7 @@ class SchedulingPage:
     def click_instruction_input_option(self):
         instructor_element = self.actions.element_to_be_clickable(driver=self.driver, element=self.instructor_select_input)
         instructor_element.click()
+        
     
     def click_first_instructor_option(self):
         first_instructor_element = self.actions.element_to_be_clickable(driver=self.driver, element=self.first_instructor_option)

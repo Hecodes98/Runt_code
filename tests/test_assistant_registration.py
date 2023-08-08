@@ -11,6 +11,8 @@ class TestAssistantRegistration:
         login_page = PageFactory.create_page(driver, "login")
         driver.get(BASE_URL)
         login_page.fill_inputs_and_click_login(username, password)
+        time.sleep(5)
+        login_page.fill_inputs_and_click_login(username, password)
         home_page = PageFactory.create_page(driver, "home")
         home_page.click_close_tutorial_button()
         home_page.click_menu_button()
@@ -21,13 +23,15 @@ class TestAssistantRegistration:
         assistant_registration_page.click_cc_option()
         assistant_registration_page.fill_document_number_textbox(document_number)
         assistant_registration_page.click_consult_button()
+        time.sleep(5)
         assistant_registration_page.click_record_violation_button()
+        time.sleep(5)
         assistant_registration_page.fill_ticket_number_textbox(ticket_number)
         time.sleep(5) #Botón buscar numero de comparendo, cuenta con un retraso propio de la página web, 
         #por eso se usa time.sleep(5) para este caso en especial, al quitar este time.sleep retorna error, que sería el comportamiento esperado
         assistant_registration_page.click_search_ticket_number_button()
     
-    @pytest.mark.parametrize("username, password, document_number, ticket_number", [("404477902", "1qazxsw2.23","12345678", "")])
+    @pytest.mark.parametrize("username, password, document_number, ticket_number", [("404477902", "1qazxsw2.24","12345678", "")])
     @pytest.mark.EP1_CUR01505
     def test_attendee_registration_field_enable_comparendo_number_field(self,driver, username, password, document_number, ticket_number):
         """
@@ -40,7 +44,7 @@ class TestAssistantRegistration:
         SaveScreenshots.save_screenshot(driver, ASSISTANT_BASE, "EP1_CUR01505")
         time.sleep(5)  
 
-    @pytest.mark.parametrize("username, password, document_number, ticket_number", [("404477902", "1qazxsw2.23","12345678", "12345678901234567890")])
+    @pytest.mark.parametrize("username, password, document_number, ticket_number", [("404477902", "1qazxsw2.24","12345678", "12345678901234567890")])
     @pytest.mark.EP2_CUR01505
     def test_attendee_registration_field_enable_infraction_number_field(self,driver, username, password, document_number, ticket_number):
         """
@@ -53,7 +57,7 @@ class TestAssistantRegistration:
         SaveScreenshots.save_screenshot(driver, ASSISTANT_BASE, "EP2_CUR01505")
         time.sleep(5)  
 
-    @pytest.mark.parametrize("username, password, document_number, ticket_number", [("404477902", "1qazxsw2.23","12345678", "12345678901234567890")])
+    @pytest.mark.parametrize("username, password, document_number, ticket_number", [("404477902", "1qazxsw2.24","12345678", "12345678901234567890")])
     @pytest.mark.EP3_CUR01505
     def test_attendee_registration_field_enable_comparendo_date(self,driver, username, password, document_number, ticket_number):
         """
@@ -66,7 +70,7 @@ class TestAssistantRegistration:
         SaveScreenshots.save_screenshot(driver, ASSISTANT_BASE, "EP3_CUR01505")
         time.sleep(5)
 
-    @pytest.mark.parametrize("username, password, document_number, ticket_number", [("404477902", "1qazxsw2.23","12345678", "12345678901234567890")])
+    @pytest.mark.parametrize("username, password, document_number, ticket_number", [("404477902", "1qazxsw2.24","12345678", "12345678901234567890")])
     @pytest.mark.EP4_CUR01505
     def test_attendee_registration_field_enable_entity(self,driver, username, password, document_number, ticket_number):
         """
@@ -79,7 +83,7 @@ class TestAssistantRegistration:
         SaveScreenshots.save_screenshot(driver, ASSISTANT_BASE, "EP4_CUR01505")
         time.sleep(5)  
 
-    @pytest.mark.parametrize("username, password, document_number, ticket_number", [("404477902", "1qazxsw2.23","12345678", "12345678901234567890")])
+    @pytest.mark.parametrize("username, password, document_number, ticket_number", [("404477902", "1qazxsw2.24","12345678", "12345678901234567890")])
     @pytest.mark.EP5_CUR01505
     def test_attendee_registration_field_enable_transit_organism(self,driver, username, password, document_number, ticket_number):
         """
@@ -92,7 +96,7 @@ class TestAssistantRegistration:
         SaveScreenshots.save_screenshot(driver, ASSISTANT_BASE, "EP5_CUR01505")
         time.sleep(5)  
     
-    @pytest.mark.parametrize("username, password, document_number, ticket_number", [("404477902", "1qazxsw2.23","12345678", "17345678901254267690")])
+    @pytest.mark.parametrize("username, password, document_number, ticket_number", [("404477902", "1qazxsw2.24","12345678", "17345678901254267690")])
     @pytest.mark.EP7_CUR01505
     def test_attendee_registration_comparendo_not_registered(self,driver, username, password, document_number, ticket_number):
         """
@@ -105,7 +109,7 @@ class TestAssistantRegistration:
         SaveScreenshots.save_screenshot(driver, ASSISTANT_BASE, "EP7_CUR01505")
         time.sleep(5)
 
-    @pytest.mark.parametrize("username, password, document_number, ticket_number", [("404477902", "1qazxsw2.23","12345678", "17345678901254267690")])
+    @pytest.mark.parametrize("username, password, document_number, ticket_number", [("404477902", "1qazxsw2.24","12345678", "17345678901254267690")])
     @pytest.mark.EP8_CUR01505
     def test_attendee_registration_field_enable_all_fields(self,driver, username, password, document_number, ticket_number):
         """
@@ -118,7 +122,7 @@ class TestAssistantRegistration:
         SaveScreenshots.save_screenshot(driver, ASSISTANT_BASE, "EP8_CUR01505")
         time.sleep(5)
 
-    @pytest.mark.parametrize("username, password, document_number, ticket_number", [("404477902", "1qazxsw2.23","12345678", "17345678901254267690")])
+    @pytest.mark.parametrize("username, password, document_number, ticket_number", [("404477902", "1qazxsw2.24","12345678", "17345678901254267690")])
     @pytest.mark.EP9_CUR01505
     def test_attendee_registration_field_valid_info(self,driver, username, password, document_number, ticket_number):
         """
@@ -144,7 +148,7 @@ class TestAssistantRegistration:
         Con este ID ya que se valida esto en cada test
     """
 
-    @pytest.mark.parametrize("username, password, document_number, ticket_number", [("404477902", "1qazxsw2.23","12345678", "17345678901254267690")])
+    @pytest.mark.parametrize("username, password, document_number, ticket_number", [("404477902", "1qazxsw2.24","12345678", "17345678901254267690")])
     @pytest.mark.EP11_CUR01505
     def test_attendee_registration_comparendo_already_exists(self,driver, username, password, document_number, ticket_number):
         """
