@@ -5,7 +5,7 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image
 from reportlab.lib.styles import getSampleStyleSheet
 
 # Ruta de la carpeta que contiene las imágenes
-carpeta_imagenes = '../evidences'
+carpeta_imagenes = '../evidences/scheduling'
 
 # Función para recorrer directorios de manera recursiva
 def recorrer_directorios(ruta):

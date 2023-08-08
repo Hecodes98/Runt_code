@@ -10,16 +10,21 @@ import time
 
 class TestScheduling:
 
-    def base(self, driver, username, password):
+    def base(self, driver, username, password, base, id):
         login_page = PageFactory.create_page(driver, "login")
         driver.get(BASE_URL)
+        time.sleep(5)
+        SaveScreenshots.save_screenshot(driver, base, id+"_step_1")
         login_page.fill_inputs_and_click_login(username, password)
         time.sleep(5)
         login_page.fill_inputs_and_click_login(username, password)
         home_page = PageFactory.create_page(driver, "home")
+        SaveScreenshots.save_screenshot(driver, base, id+"_step_2")
         home_page.click_close_tutorial_button()
         home_page.click_menu_button()
+        SaveScreenshots.save_screenshot(driver, base, id+"_step_3")
         home_page.click_courses_menu_option()
+        SaveScreenshots.save_screenshot(driver, base, id+"_step_4")
         home_page.click_courses_scheduling_option()
         time.sleep(15)
 
@@ -33,15 +38,16 @@ class TestScheduling:
         de la franja horaria seleccionada en el calendario, son campos no editables.
         
         """
-        self.base(driver,username,password)
-        SaveScreenshots.save_screenshot(driver, SCHEDULING_BASE, "EP2_CUR01525")
+        SCHEDULING_BASE_PATH = SCHEDULING_BASE+"/EP2_CUR01525"
+        self.base(driver,username,password, SCHEDULING_BASE_PATH, "EP2_CUR01525")
+        SaveScreenshots.save_screenshot(driver, SCHEDULING_BASE_PATH, "EP2_CUR01525_step_5")
         scheduling_page = PageFactory.create_page(driver, "scheduling")
         scheduling_page.click_room_select_input()
-        SaveScreenshots.save_screenshot(driver, SCHEDULING_BASE, "EP2_CUR01525")
+        SaveScreenshots.save_screenshot(driver, SCHEDULING_BASE_PATH, "EP2_CUR01525_step_6")
         time.sleep(2)
         with check:
             assert_that(scheduling_page.validate_order_of_rooms_list()).is_true()
-        SaveScreenshots.save_screenshot(driver, SCHEDULING_BASE, "EP2_CUR01525")
+        SaveScreenshots.save_screenshot(driver, SCHEDULING_BASE_PATH, "EP2_CUR01525_step_7")
         time.sleep(5)
 
 
@@ -55,23 +61,24 @@ class TestScheduling:
         de la franja horaria seleccionada en el calendario, son campos no editables.
         
         """
-        self.base(driver,username,password)
+        self.base(driver,username,password, SCHEDULING_BASE, "EP4_CUR01525")
         scheduling_page = PageFactory.create_page(driver, "scheduling")
         scheduling_page.click_room_select_input()
         scheduling_page.click_room_one_option()
         scheduling_page.click_day_option()
-        SaveScreenshots.save_screenshot(driver, SCHEDULING_BASE, "EP4_CUR01525")
+        SaveScreenshots.save_screenshot(driver, SCHEDULING_BASE, "EP4_CUR01525_step_5")
         time.sleep(2)
         scheduling_page.click_next_option()
         time.sleep(2)
         scheduling_page.scroll_top()
         time.sleep(2)
+        SaveScreenshots.save_screenshot(driver, SCHEDULING_BASE, "EP4_CUR01525_step_6")
         scheduling_page.click_record_violation_button()
         time.sleep(2)
         text_element = scheduling_page.validate_inputs_appears()
         with check:
             assert_that(text_element).is_equal_to("Hora Inicio") 
-        SaveScreenshots.save_screenshot(driver, SCHEDULING_BASE, "EP4_CUR01525")
+        SaveScreenshots.save_screenshot(driver, SCHEDULING_BASE, "EP4_CUR01525_step_7")
         time.sleep(5)
     
     @pytest.mark.EP5_CUR01525
