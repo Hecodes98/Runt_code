@@ -5,8 +5,13 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image
 from reportlab.lib.styles import getSampleStyleSheet
 
 # Ruta de la carpeta que contiene las imágenes
-carpeta_imagenes = '../evidences/scheduling'
-
+SCHEDULING_PATH = '../evidences/scheduling'
+ORGANIZATIONS_PATH = '../evidences/test_organizations'
+NEW_ROOM_PATH = '../evidences/new_room_creation'
+ASSISTANT_REGISTRATION_PATH = '../evidences/test_assistant_registration'
+CONSULT_INFORMATION_PATH = '../evidences/test_consult_information_infractions'
+paths = [SCHEDULING_PATH, ORGANIZATIONS_PATH, NEW_ROOM_PATH, ASSISTANT_REGISTRATION_PATH, CONSULT_INFORMATION_PATH]
+imagenes = list()
 # Función para recorrer directorios de manera recursiva
 def recorrer_directorios(ruta):
     imagenes = []
@@ -18,7 +23,8 @@ def recorrer_directorios(ruta):
     return imagenes
 
 # Obtener la lista de rutas de imágenes en todas las subcarpetas
-imagenes = recorrer_directorios(carpeta_imagenes)
+for path in paths:
+    imagenes += recorrer_directorios(path)
 
 # Crear un documento PDF
 doc = SimpleDocTemplate("lista_imagenes_subcarpetas.pdf", pagesize=letter)
@@ -30,7 +36,8 @@ styles = getSampleStyleSheet()
 contenido = []
 
 # Agregar título
-titulo = Paragraph("Lista de Imágenes en Subcarpetas", styles['Title'])
+titulo = Paragraph("Evidencias capturadas", styles['Title'])
+description = Paragraph("El ID de la evidencias se encuentra al pie de la evidencia", styles['Normal'])
 contenido.append(titulo)
 contenido.append(Spacer(1, 12))
 
